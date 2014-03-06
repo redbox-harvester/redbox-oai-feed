@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:int="http://www.springframework.org/schema/integration"
+    xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+    xmlns:int-jdbc="http://www.springframework.org/schema/integration/jdbc" 
+    xmlns:jdbc="http://www.springframework.org/schema/jdbc" 
+    xmlns:int-jmx="http://www.springframework.org/schema/integration/jmx" 
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/integration
+            http://www.springframework.org/schema/integration/spring-integration.xsd
+            http://www.springframework.org/schema/integration/jms
+            http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd 
+            http://www.springframework.org/schema/integration/jdbc 
+            http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd 
+            http://www.springframework.org/schema/integration/jmx 
+            http://www.springframework.org/schema/integration/jmx/spring-integration-jmx.xsd">
+<!-- 
+Configuration file for accepting Oai-pmh publish requests.
+ -->
+ 
+ 	<int-jmx:mbean-export id="mbeanExporterOaiFeed" default-domain="au.com.redboxresearchdata.harvester.client.oaifeed" server="mbeanServer"/>  	
+ 	
+ 	<int:channel id="oaiHarvestMainChannel">		
+ 		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiVelocityChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>		
+	<int:channel id="oaiHarvestRoutingChannel" >
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>	
+	<int:channel id="oaiInvalidTypeChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+			<int:wire-tap channel="errorLoggingChannel" />
+		</int:interceptors>		
+	</int:channel>
+		
+	<int:channel id="oaiMetadataFormatOutboundChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiRecordFormatChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiRecordSplitterChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiRecordOutboundChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiIdentifyOutboundChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiSetOutboundChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	
+	
+	<!--  main inbound channel -->
+	<int-jms:message-driven-channel-adapter id="jmsIn" destination="inputQueue" channel="oaiHarvestMainChannel"/>
+	       	
+	<int:splitter ref="jsonSplitter" method="parseRequest" input-channel="oaiHarvestMainChannel" output-channel="oaiRecordFormatChannel"/>
+	
+	<!--  route to record to special channel-->
+	<int:header-value-router header-name="type" input-channel="oaiRecordFormatChannel" default-output-channel="oaiVelocityChannel">
+		<int:mapping value="metadataFormat" channel="oaiVelocityChannel" />
+		<int:mapping value="set" channel="oaiVelocityChannel" />
+		<int:mapping value="identify" channel="oaiVelocityChannel" />
+		<int:mapping value="record" channel="oaiRecordSplitterChannel" />
+	</int:header-value-router>
+	<int:splitter ref="cloningSplitter" method="cloneByArray" input-channel="oaiRecordSplitterChannel" output-channel="oaiVelocityChannel"/>
+	
+	<!--  running the Velocity transformers -->
+	<int:transformer input-channel="oaiVelocityChannel" output-channel="oaiHarvestRoutingChannel" ref="velocityTransformer" method="handleMessage" />
+	
+	<!--  route to DB persisitence, depending on type -->
+	<int:header-value-router header-name="type" input-channel="oaiHarvestRoutingChannel" default-output-channel="oaiInvalidTypeChannel">
+			<int:mapping value="metadataFormat" channel="oaiMetadataFormatOutboundChannel" />
+			<int:mapping value="record_eac-cpf" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_oai_dc" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="identify" channel="oaiIdentifyOutboundChannel" />
+			<int:mapping value="set" channel="oaiSetOutboundChannel" />
+	</int:header-value-router>
+										
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiMetadataFormatOutboundChannel" query="${harvest.sql.metadata.insert}" sql-parameter-source-factory="spelSource_metadataFormat"/> 			
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordOutboundChannel" query="${harvest.sql.record.insert}" sql-parameter-source-factory="spelSource_record"/>
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiIdentifyOutboundChannel" query="${harvest.sql.identify.insert}" sql-parameter-source-factory="spelSource_identify"/>
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiSetOutboundChannel" query="${harvest.sql.set.insert}" sql-parameter-source-factory="spelSource_set"/>
+
+	<int:logging-channel-adapter id="mainloggingChannel"
+		expression="'Record headers:' + headers" />
+	<int:logging-channel-adapter id="errorLoggingChannel"
+		expression="'Failed to process record:' + headers.type" />
+
+	
+	<bean id="jsonSplitter"
+		class="au.com.redboxresearchdata.harvester.json.splitter.GenericJsonSplitter" >		
+	</bean>
+	
+	<bean id="cloningSplitter"
+		class="au.com.redboxresearchdata.harvester.json.splitter.CloningJsonSplitter" >
+		<property name="config" value="#{placeholderProperties.config}" />		
+	</bean>
+	
+	<bean id="velocityTransformer"
+		class="au.com.redboxresearchdata.harvester.json.transformer.JsonVelocityTransformer" >
+		<property name="config" value="#{placeholderProperties.config}" />				
+	</bean>
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${harvest.jdbc.driver}" />
+		<property name="url" value="${harvest.jdbc.url}" />
+		<property name="username" value="${harvest.jdbc.user}" />
+		<property name="password" value="${harvest.jdbc.pw}" />
+	</bean>
+	
+	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean id="placeholderProperties" class="au.com.redboxresearchdata.util.config.ConfigSlurperPlaceholderConfigurer">
+		<property name="environment" value="#{grailsApplication.config.get('environment')}"/>
+		<property name="defaultEnvironment" value="production" />
+		<property name="config" value="#{grailsApplication.config.get('clientConfigObj')}" />
+	</bean>			
+	
+	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="${activemq.url}" />
+    </bean>
+    
+    <bean id="inputQueue" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg value="oaiPmhFeed"/>
+	</bean>	
+	
+	<bean id="spelSource_metadataFormat"
+	      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	    <property name="parameterExpressions">
+	        <map>
+	            <entry key="metadataPrefix"     value="headers['json'].metadataPrefix"/>
+	            <entry key="schemaTxt" 			value="headers['json'].schemaTxt"/>
+	            <entry key="metadataNamespace"  value="headers['json'].metadataNamespace"/>
+	        </map>
+	    </property>
+	</bean>
+	<bean id="spelSource_record"
+	      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	    <property name="parameterExpressions">
+	        <map>
+	            <entry key="metadataPrefix" value="headers['metadataPrefix']"/>
+	            <entry key="source" 		value="headers['json'].source"/>
+	            <entry key="recordId"  		value="headers['json'].recordId"/>
+	            <entry key="xmlEntry"  		value="payload"/>
+	        </map>
+	    </property>
+	</bean>
+	<bean id="spelSource_identify"
+	      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	    <property name="parameterExpressions">
+	        <map>	            
+	            <entry key="xmlEntry"  		value="headers['json'].xmlEntry"/>
+	        </map>
+	    </property>
+	</bean>
+	<bean id="spelSource_set"
+	      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	    <property name="parameterExpressions">
+	        <map>
+	        	<entry key="spec"  		value="headers['json'].spec"/>	            
+	            <entry key="xmlEntry"  		value="headers['json'].xmlEntry"/>
+	        </map>
+	    </property>
+	</bean>
+</beans>

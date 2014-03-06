@@ -1,0 +1,43 @@
+#set($stringUtil = $data.get('stringUtil'))
+<eac-cpf xmlns="urn:isbn:1-931666-33-4"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xsi:schemaLocation="urn:isbn:1-931666-33-4 http://eac.staatsbibliothek-berlin.de/schema/cpf.xsd">
+
+    <control>
+        <recordId>$data.get('jsonData').get("recordId")</recordId>
+        <maintenanceStatus>new</maintenanceStatus>
+        <maintenanceAgency>            
+            <agencyCode>$stringUtil.escapeXml($data.get('jsonData').get("control").get("maintenanceAgency").get("agencyCode"))</agencyCode>            
+            <agencyName>$stringUtil.escapeXml($data.get('jsonData').get("control").get("maintenanceAgency").get("agencyName"))</agencyName>
+        </maintenanceAgency>
+        <languageDeclaration>
+            <language languageCode="eng">English</language>
+            <script scriptCode="Latn">Latin</script>
+        </languageDeclaration>    
+        <maintenanceHistory>
+            <maintenanceEvent>
+                <eventType>created</eventType>
+                <eventDateTime standardDateTime="$stringUtil.escapeXml($data.get('jsonData').get('control').get('maintenanceHistory').get('maintenanceEvent').get('eventDateTime_standardDateTime'))" />
+                <agentType>machine</agentType>
+                <agent>$stringUtil.escapeXml($data.get('jsonData').get('control').get('maintenanceHistory').get('maintenanceEvent').get('agent'))</agent>
+            </maintenanceEvent>
+        </maintenanceHistory>
+    </control>
+
+    <cpfDescription>
+        <identity>
+            <entityId>$data.get('jsonData').get('entityId')</entityId>
+            <entityType>person</entityType>
+            <nameEntry>                
+                <part localType="surname">$stringUtil.escapeXml($data.get('jsonData').get('surname'))</part>
+                <part localType="forename">$stringUtil.escapeXml($data.get('jsonData').get('forename'))</part>                
+            </nameEntry>
+        </identity>
+        <description>
+            <biogHist>
+            	<abstract>$stringUtil.escapeXml($data.get('jsonData').get('description'))</abstract>                
+            </biogHist>
+        </description>
+    </cpfDescription>
+</eac-cpf>
