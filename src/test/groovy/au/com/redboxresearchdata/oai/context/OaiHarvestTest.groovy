@@ -106,7 +106,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		def mdPrefix = ["eac-cpf", "oai_dc"]
 		def jsonMapData = [
 			"header":[
-				"type":"record"
+				"type":"record_people"
 			],			
 			"data":[
 				[
@@ -127,7 +127,9 @@ class OaiHarvestTest extends GroovyTestCase {
 						"entityId":"http://demo.redboxresearchdata.com.au/mint/published/detail/d082b0890570265c99b52f360a674112",
 						"surname":"Zweinstein",
 						"forename":"Alberto",
-						"description":"Dr Alberto Zweinstein is a Lecturer at the University of Examples"						
+						"salutation":"Mr",
+						"description":"Dr Alberto Zweinstein is a Lecturer at the University of Examples",
+						"dateStamp":"2014-03-18T06:09:03Z"						
 					]
 				]
 			]				
@@ -146,16 +148,26 @@ class OaiHarvestTest extends GroovyTestCase {
 			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)		
 			assertNotNull(rowEntry.xmlEntry)
 			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].jsonData.entityId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].jsonData.dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
 			if ("eac-cpf" == rowEntry.metadataPrefix) {		
-				assertEquals(jsonMapData.data[0].jsonData.recordId, parsedXml.control.recordId.toString())
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyCode, parsedXml.control.maintenanceAgency.agencyCode.toString())
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyName, parsedXml.control.maintenanceAgency.agencyName.toString())		
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.eventDateTime_standardDateTime, parsedXml.control.maintenanceHistory.maintenanceEvent.eventDateTime.@standardDateTime.toString())
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.agent, parsedXml.control.maintenanceHistory.maintenanceEvent.agent.toString())
-				assertEquals(jsonMapData.data[0].jsonData.entityId, parsedXml.cpfDescription.identity.entityId.toString())
-				assertEquals(jsonMapData.data[0].jsonData.surname, parsedXml.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "surname"}[0].toString())
-				assertEquals(jsonMapData.data[0].jsonData.forename, parsedXml.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "forename"}[0].toString())
-				assertEquals(jsonMapData.data[0].jsonData.description, parsedXml.cpfDescription.description.biogHist.abstract.toString())
+				def eacCpf = parsedXml.metadata["eac-cpf"]
+				assertEquals(jsonMapData.data[0].jsonData.recordId, eacCpf.control.recordId.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyCode, eacCpf.control.maintenanceAgency.agencyCode.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyName, eacCpf.control.maintenanceAgency.agencyName.toString())		
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.eventDateTime_standardDateTime, eacCpf.control.maintenanceHistory.maintenanceEvent.eventDateTime.@standardDateTime.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.agent, eacCpf.control.maintenanceHistory.maintenanceEvent.agent.toString())
+				assertEquals(jsonMapData.data[0].jsonData.entityId, eacCpf.cpfDescription.identity.entityId.toString())
+				assertEquals(jsonMapData.data[0].jsonData.surname, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "surname"}[0].toString())
+				assertEquals(jsonMapData.data[0].jsonData.forename, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "forename"}[0].toString())
+				assertEquals(jsonMapData.data[0].jsonData.description, eacCpf.cpfDescription.description.biogHist.abstract.toString())
+			}
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				def oaiDc = parsedXml.metadata["dc"]
+				assertEquals("${jsonMapData.data[0].jsonData.salutation} ${jsonMapData.data[0].jsonData.forename} ${jsonMapData.data[0].jsonData.surname}", oaiDc["title"].toString())
+				assertEquals(jsonMapData.data[0].jsonData.description, oaiDc["description"].toString())
 			}
 		}
 		logger.info("Record passed.")

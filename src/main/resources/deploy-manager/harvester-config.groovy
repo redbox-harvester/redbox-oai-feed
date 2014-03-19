@@ -17,62 +17,54 @@
  ******************************************************************************/
 /**
  * ReDBox OAI-PMH Feed Harvester Client configuration
- *
+ * 
  * @author <a href="https://github.com/shilob">Shilo Banihit</a>
  *
  */
 // Environment specific config below...
 environments {
-	test {
+	production {
 		client {
 			harvesterId = harvesterId // the unique harvester name, can be dynamic or static. Console only clients likely won't need this to be dynamic.
 			description = "ReDBox OAI-PMH Harvester"
-			base = "${managerBase}${harvesterId}/".toString() // optional base directory.
-			autoStart = true // whether the Harvester Manager will start this harvester upon start up otherwise, it will be manually started by an administrator
-			siPath = "src/main/resources/deploy-manager/applicationContext-SI-harvester.xml" // the app context definition for SI			
-			classPathEntries = [] // entries that will be added to the class path
+			base = "${managerBase}${harvesterId}/".toString() // optional base directory. 
+			autoStart = true // whether the Harvester Manager will start this harvester upon start up otherwise, it will be manually started by an administrator 
+			siFile = "applicationContext-SI-harvester.xml" // the app context definition for SI
+			siPath = base+siFile // the path used when starting this harvester
+			classPathEntries = ["resources/lib/postgresql-9.3-1101-jdbc41.jar","resources/lib/xbean-spring-3.16.jar"] // entries that will be added to the class path
 			mbeanExporter = "mbeanExporterRedboxJdbcHarvester" // the exporter is necessary for orderly shutdown
-			orderlyShutdownTimeout = 10000 // in ms
+			orderlyShutdownTimeout = 10000 // in ms 
 		}
 		file {
 			runtimePath = client.base+"runtime/" + configPath
 			customPath = client.base+"custom/" + configPath
 			ignoreEntriesOnSave = ["runtime"]
 		}
-		harvest {
+		harvest {			
 			jdbc {
-				user = "proai"
-				pw = "proai"
-				driver = "org.apache.derby.jdbc.EmbeddedDriver"
-				url = "jdbc:derby:target/test/db/;create=true"				
+				user = "oaiserver"
+				pw = "oaiserver"
+				driver = "org.postgresql.Driver"
+				url = "jdbc:postgresql://localhost/oaiserver"
 			}
-			sql {
-				// the init and select entries below are purely for testing purposes, the tables will have to be initialized externally.				
+			sql {				
 				metadata {
-					init = "CREATE TABLE provider_metadataformat (id INT not null GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), metadataPrefix varchar(1024), schemaTxt varchar(1024), metadataNamespace varchar(1024))"
-					insert = "INSERT INTO provider_metadataformat (metadataPrefix, schemaTxt, metadataNamespace) VALUES (:metadataPrefix, :schemaTxt, :metadataNamespace)"
-					select = "SELECT * FROM provider_metadataformat WHERE metadataPrefix=?"
+					insert = "INSERT INTO provider_metadataformat (metadataPrefix, schemaTxt, metadataNamespace) VALUES (:metadataPrefix, :schemaTxt, :metadataNamespace);"
 				}
 				record {
-					init = "CREATE TABLE provider_records (id INT not null GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), metadataPrefix varchar(1024), recordId varchar(1024), source VARCHAR(32000), xmlEntry VARCHAR(32000))"
 					insert = "INSERT INTO provider_records (metadataPrefix, source, recordId, xmlEntry) VALUES (:metadataPrefix,:source,:recordId,:xmlEntry)"
-					select = "SELECT * FROM provider_records WHERE recordId=?"
 				} 
 				identify {
-					init = "CREATE TABLE provider_identity (id INT not null GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), xmlEntry VARCHAR(32000))"
 					insert = "INSERT INTO provider_identity (xmlEntry) VALUES (:xmlEntry)"
-					select = "SELECT * FROM provider_identity"
 				}
 				set {
-					init = "CREATE TABLE provider_sets (id INT not null GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), spec varchar(1024), xmlEntry VARCHAR(32000))"
 					insert = "INSERT INTO provider_sets (spec, xmlEntry) VALUES (:spec, :xmlEntry)"
-					select = "SELECT * FROM provider_sets"
 				}				
 			}					
 		}
 		velocityTransformer {
-			templateDir = "src/main/resources/deploy-manager/templates/"
-			scriptDir = "src/main/resources/deploy-manager/scripts/"
+			templateDir = client.base+"templates/"
+			scriptDir = client.base+"scripts/"
 			metadataFormat {
 				templates = []
 			}
@@ -95,7 +87,7 @@ environments {
 			entryHeader = "metadataPrefix"
 		}
 		activemq {
-			url = "vm://localhost?broker.persistent=false"
+			url = "tcp://localhost:9301"
 		}
-	}
+	}	
 }

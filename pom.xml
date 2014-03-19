@@ -44,6 +44,11 @@
 	    <version>1.7</version>
 	    <scope>test</scope>
   	</dependency>
+	 <dependency>
+		<groupId>org.apache.xbean</groupId>
+		<artifactId>xbean-spring</artifactId>
+		<version>3.16</version>
+	</dependency>
   </dependencies>
   <build>
   	<plugins>

@@ -6,6 +6,7 @@
     xmlns:int-jdbc="http://www.springframework.org/schema/integration/jdbc" 
     xmlns:jdbc="http://www.springframework.org/schema/jdbc" 
     xmlns:int-jmx="http://www.springframework.org/schema/integration/jmx" 
+    xmlns:amq="http://activemq.apache.org/schema/core"  
     xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/integration
@@ -15,7 +16,9 @@
             http://www.springframework.org/schema/integration/jdbc 
             http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd 
             http://www.springframework.org/schema/integration/jmx 
-            http://www.springframework.org/schema/integration/jmx/spring-integration-jmx.xsd">
+            http://www.springframework.org/schema/integration/jmx/spring-integration-jmx.xsd 
+            http://activemq.apache.org/schema/core  
+            http://activemq.apache.org/schema/core/activemq-core.xsd ">
 <!-- 
 Configuration file for accepting Oai-pmh publish requests.
  -->
@@ -86,7 +89,7 @@ Configuration file for accepting Oai-pmh publish requests.
 		<int:mapping value="metadataFormat" channel="oaiVelocityChannel" />
 		<int:mapping value="set" channel="oaiVelocityChannel" />
 		<int:mapping value="identify" channel="oaiVelocityChannel" />
-		<int:mapping value="record" channel="oaiRecordSplitterChannel" />
+		<int:mapping value="record_people" channel="oaiRecordSplitterChannel" />
 	</int:header-value-router>
 	<int:splitter ref="cloningSplitter" method="cloneByArray" input-channel="oaiRecordSplitterChannel" output-channel="oaiVelocityChannel"/>
 	
@@ -96,8 +99,8 @@ Configuration file for accepting Oai-pmh publish requests.
 	<!--  route to DB persisitence, depending on type -->
 	<int:header-value-router header-name="type" input-channel="oaiHarvestRoutingChannel" default-output-channel="oaiInvalidTypeChannel">
 			<int:mapping value="metadataFormat" channel="oaiMetadataFormatOutboundChannel" />
-			<int:mapping value="record_eac-cpf" channel="oaiRecordOutboundChannel" />
-			<int:mapping value="record_oai_dc" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_people_eac-cpf" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_people_oai_dc" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="identify" channel="oaiIdentifyOutboundChannel" />
 			<int:mapping value="set" channel="oaiSetOutboundChannel" />
 	</int:header-value-router>
@@ -145,9 +148,20 @@ Configuration file for accepting Oai-pmh publish requests.
 		<property name="config" value="#{grailsApplication.config.get('clientConfigObj')}" />
 	</bean>			
 	
-	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+	<!-- 
+	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory" init-method="start">
         <property name="brokerURL" value="${activemq.url}" />
-    </bean>
+    </bean> -->
+   
+	<bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+		<property name="targetConnectionFactory">
+			<bean class="org.apache.activemq.ActiveMQConnectionFactory">
+				<property name="brokerURL" value="${activemq.url}"/>		
+			</bean>
+		</property>
+		<property name="sessionCacheSize" value="10"/>
+		<property name="cacheProducers" value="false"/>
+	</bean>
     
     <bean id="inputQueue" class="org.apache.activemq.command.ActiveMQQueue">
 		<constructor-arg value="oaiPmhFeed"/>
@@ -191,4 +205,9 @@ Configuration file for accepting Oai-pmh publish requests.
 	        </map>
 	    </property>
 	</bean>
+	<amq:broker id="activeMQBroker">
+	    <amq:transportConnectors>
+	        <amq:transportConnector uri="${activemq.url}" />
+	    </amq:transportConnectors>
+	</amq:broker>
 </beans>
