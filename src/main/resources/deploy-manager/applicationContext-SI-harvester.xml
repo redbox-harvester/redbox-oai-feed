@@ -205,7 +205,7 @@ Configuration file for accepting Oai-pmh publish requests.
 	        </map>
 	    </property>
 	</bean>
-	<amq:broker id="activeMQBroker">
+	<amq:broker id="activeMQBroker" dataDirectory="${activemq.dataDir}">
 	    <amq:transportConnectors>
 	        <amq:transportConnector uri="${activemq.url}" />
 	    </amq:transportConnectors>

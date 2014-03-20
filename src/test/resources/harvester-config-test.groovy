@@ -96,6 +96,7 @@ environments {
 		}
 		activemq {
 			url = "vm://localhost?broker.persistent=false"
+			dataDir = "target/activemq-data/"
 		}
 	}
 }

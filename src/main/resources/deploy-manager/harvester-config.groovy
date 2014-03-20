@@ -88,6 +88,7 @@ environments {
 		}
 		activemq {
 			url = "tcp://localhost:9301"
+			dataDir = client.base + "activemq-data/"
 		}
 	}	
 }
