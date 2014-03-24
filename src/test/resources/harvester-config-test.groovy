@@ -31,7 +31,7 @@ environments {
 			autoStart = true // whether the Harvester Manager will start this harvester upon start up otherwise, it will be manually started by an administrator
 			siPath = "src/main/resources/deploy-manager/applicationContext-SI-harvester.xml" // the app context definition for SI			
 			classPathEntries = [] // entries that will be added to the class path
-			mbeanExporter = "mbeanExporterRedboxJdbcHarvester" // the exporter is necessary for orderly shutdown
+			mbeanExporter = "mbeanExporterOaiFeed" // the exporter is necessary for orderly shutdown
 			orderlyShutdownTimeout = 10000 // in ms
 		}
 		file {

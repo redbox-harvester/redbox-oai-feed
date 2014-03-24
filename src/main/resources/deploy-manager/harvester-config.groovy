@@ -32,7 +32,7 @@ environments {
 			siFile = "applicationContext-SI-harvester.xml" // the app context definition for SI
 			siPath = base+siFile // the path used when starting this harvester
 			classPathEntries = ["resources/lib/postgresql-9.3-1101-jdbc41.jar","resources/lib/xbean-spring-3.16.jar"] // entries that will be added to the class path
-			mbeanExporter = "mbeanExporterRedboxJdbcHarvester" // the exporter is necessary for orderly shutdown
+			mbeanExporter = "mbeanExporterOaiFeed" // the exporter is necessary for orderly shutdown
 			orderlyShutdownTimeout = 10000 // in ms 
 		}
 		file {
@@ -87,7 +87,7 @@ environments {
 			entryHeader = "metadataPrefix"
 		}
 		activemq {
-			url = "tcp://localhost:9301"
+			url = "tcp://0.0.0.0:9301"
 			dataDir = client.base + "activemq-data/"
 		}
 	}	
