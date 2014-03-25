@@ -23,7 +23,7 @@ PROGDIR="$( cd "$( dirname "$0" )" && pwd )"
 
 #----------------------------------------------------------------
 # Configuration  
-
+VERBOSE=yes
 NGINX_CONFIG_DIR=/etc/nginx/conf.d
 DEFAULT_TMPDIR=/tmp/install-redbox-oaipmh-feed
 BASE_DIR=/opt/harvester
@@ -44,15 +44,24 @@ OAISERVER_INITSQL="init.sql"
 OAISERVER_USERSQL="user.sql"
 HARVESTER_OAIPMH_FILE="redbox-oaipmh-feed.zip"
 HARVESTER_OAIPMH_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata.oai&a=redbox-oai-feed&v=LATEST&e=zip&c=bin"
+GROOVY_VERSION="2.2.2"
+GROOVY_INSTALL_URL="http://dl.bintray.com/groovy/maven/groovy-binary-$GROOVY_VERSION.zip"
+GROOVY_INSTALL_DIR="/opt/groovy"
+SAMPLE_RECORD_SCRIPT="$HARVESTER_CONFIG_SRC/addSampleEacRecord.groovy"
+ORACLE_JDK_URL="http://dev.redboxresearchdata.com.au/jdk/jdk-7u51-linux-x64.rpm"
 # Sniffing OS...
 if [ -e "/etc/redhat-release" ]; then
     echo "Detected a CENTOS/Fedora/RHEL distro..."
-    #--quiet # not verbose, so run yum in quiet mode 
-    YUM_VERBOSE=    
+    if [ -n "$VERBOSE" ]; then 
+        YUM_VERBOSE=
+    else
+        YUM_VERBOSE="--quiet"
+    fi    
     REQUIRED_CMDS="curl yum adduser"
-    REQUIRED_APPS="tomcat7 tomcat7-admin-webapps nginx postgresql93-server"
+    REQUIRED_APPS="tomcat7 tomcat7-admin-webapps nginx postgresql93-server unzip"
     INSTALL_CMD="yum install -y $YUM_VERBOSE"
-    TOMCAT_HOME="/usr/share/tomcat7"    
+    TOMCAT_HOME="/usr/share/tomcat7"
+    TOMCAT_WEBAPP_DIR="/var/lib/tomcat7/webapps/"    
 else
     echo "This OS is not supported yet."
     exit 1        
@@ -69,12 +78,12 @@ function die () {
 #----------------------------------------------------------------
 # Install Required apps 
 function install_apps () {   
-    rpm -ivh http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm
-    yum install yum-priorities
-    rpm -ivh http://mirrors.dotsrc.org/jpackage/6.0/generic/free/RPMS/jpackage-release-6-3.jpp6.noarch.rpm    
-    echo "Checking for $REQUIRED_APPS installations..."
+    rpm -ivh http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm 
+    yum install -y yum-priorities 
+    rpm -ivh http://mirrors.dotsrc.org/jpackage/6.0/generic/free/RPMS/jpackage-release-6-3.jpp6.noarch.rpm             
+    echo "Checking for $REQUIRED_APPS installations..."    
     for PACKAGE in $REQUIRED_APPS; do
-	rpm -q $PACKAGE >/dev/null 2>&1
+	rpm -q $PACKAGE >/dev/null 2>&1    
 	if [ $? -ne 0 ]; then
 	    # Package not installed: install it
 	    echo "Installing package: $PACKAGE (downloading, please wait)"        
@@ -85,7 +94,28 @@ function install_apps () {
 		  echo "Package already installed: $PACKAGE"
 	    fi
 	fi
-    done        
+    done
+    echo "Checking if JDK 1.7 is installed..."
+    which "javac" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Installing JDK 1.7..."
+        rm -rf jdk-7u51-linux-x64.rpm 
+        wget "$ORACLE_JDK_URL" || die
+        rpm -Uvh jdk-7u51-linux-x64.rpm || die
+        alternatives --install /usr/bin/javac javac /usr/java/jdk1.7.0_51/bin/javac 200000 || die
+        alternatives --install /usr/bin/java java /usr/java/jdk1.7.0_51/bin/java 200000 || die                     
+    fi
+    #----------------
+    which "groovy" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+  	    echo "Groovy not available, installing..."
+        mkdir $GROOVY_INSTALL_DIR
+        cd $GROOVY_INSTALL_DIR 
+        wget $GROOVY_INSTALL_URL
+        unzip groovy-binary-$GROOVY_VERSION.zip
+        ln -s "${GROOVY_INSTALL_DIR}/groovy-${GROOVY_VERSION}/bin/groovy" /usr/bin/groovy          
+        cd -                  	    
+  	fi            
 }
 #----------------------------------------------------------------
 # Uninstall Required apps
@@ -125,15 +155,24 @@ function install () {
   	fi
     done
     #----------------
+    HOSTNAME=`hostname`
+    ping -c 1 "$HOSTNAME" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+    	echo "$PROG: cannot resolve this server's hostname: $HOSTNAME, adding to /etc/hosts as 127.0.0.1" >&2
+    	echo "127.0.0.1   $HOSTNAME" >> /etc/hosts
+    fi    
+    #----------------
     echo "Creating directories..."
     mkdir $TMPDIR
     cd $TMPDIR
     mkdir $MNT_DIR
     chown tomcat $MNT_DIR
     chmod o+w $MNT_DIR 
-    ln -s $MNT_DIR $BASE_DIR            
+    ln -s $MNT_DIR $BASE_DIR                    
 
+    #---------------
     install_apps
+        
     #----------------    
     echo "Creating app work dirs.."
     sudo -u tomcat mkdir "$BASE_DIR/$HARVESTER_WORK_DIR"
@@ -153,9 +192,7 @@ function install () {
     echo "Creating '$NGINX_CONFIG_DIR/$OAISERVER_NGINX_CONFIG_FILE' from '$OAISERVER_NGINX_CONFIG_URL'"
     curl -L -o "$NGINX_CONFIG_DIR/$OAISERVER_NGINX_CONFIG_FILE" "$OAISERVER_NGINX_CONFIG_URL" || die
     mv $NGINX_CONFIG_DIR/default.conf $NGINX_CONFIG_DIR/default.bak
-    service nginx restart     
-    #echo "Creating '$NGINX_CONFIG_DIR/$HARVESTER_NGINX_CONFIG_FILE' from '$HARVESTER_NGINX_CONFIG_URL'"
-    #curl -L -o "$NGINX_CONFIG_DIR/$HARVESTER_NGINX_CONFIG_FILE" "$HARVESTER_NGINX_CONFIG_URL" || die
+    service nginx restart         
     echo "Configuring DB..."
     mv $PGSQL_ORIG_BASE $PGSQL_BASE
     ln -s $PGSQL_BASE $PGSQL_ORIG_BASE  
@@ -170,7 +207,7 @@ function install () {
     psql -U oaiserver < $OAISERVER_INITSQL || die
     echo "Starting tomcat..."
     service tomcat7 start
-    tomcat_ready    
+    is_ready "$TOMCAT_HOME/logs/catalina.out" "Tomcat" "Server startup"     
     echo "Deploying Harvester to Manager..."
     curl -L -o $HARVESTER_OAIPMH_FILE "$HARVESTER_OAIPMH_URL"
     curl -i -F "harvesterPackage=@$HARVESTER_OAIPMH_FILE" -H "Accept: application/json" "http://localhost:8080/json-harvester-manager/harvester/upload/redbox-oai-pmh-feed"
@@ -181,7 +218,14 @@ function install () {
       curl -i -H "Accept: application/json" "http://localhost:8080/json-harvester-manager/harvester/start/redbox-oai-pmh-feed"      
     else
         echo "Failed to start Harvester... please check configuration."      
-    fi                                                
+    fi
+    cd $PROGDIR
+    curl "http://localhost/oai-server/?verb=ListMetadataFormats"
+    is_ready "$TOMCAT_HOME/logs/catalina.out" "OAIServer" "Update cycle finished"    
+    curl "http://localhost/oai-server/?verb=ListMetadataFormats"
+    wget $SAMPLE_RECORD_SCRIPT
+    echo "---------All done!----------"
+    echo "You may want to optionally install sample records by running 'groovy addSampleEacRecord.groovy'"                                                    
 }
 
 
@@ -246,9 +290,11 @@ function cleanup () {
     rm -f $PGSQL_ORIG_BASE || die
     
     rm -rf "$TOMCAT_HOME" || die    
+    rm -rf "$TOMCAT_WEBAPP_DIR" || die
+    rm -rf "/var/log/tomcat7/" || die 
     
     rm -f "$TOMCAT_HOME/$HARVESTER_WORK_DIR" || die
-    rm -f "$TOMCAT_HOME/$OAISERVER_WORK_DIR" || die
+    rm -f "$TOMCAT_HOME/$OAISERVER_WORK_DIR" || die    
     
     rm -f "$NGINX_CONFIG_DIR/$OAISERVER_NGINX_CONFIG_FILE" || die
     rm -f "$NGINX_CONFIG_DIR/$HARVESTER_NGINX_CONFIG_FILE" || die                                
@@ -259,12 +305,13 @@ function cleanup () {
 }
 
 #----------------------------------------------------------------
-# Determine if Tomcat is ready
+# Determine if something is ready using a log.
+function is_ready () {
+    MAIN_LOG_FILE=$1
+    LABEL=$2
+    SEARCHTXT=$3 
 
-function tomcat_ready () {
-    MAIN_LOG_FILE="$TOMCAT_HOME/logs/catalina.out"
-
-    echo "Waiting for Tomcat to be ready..."
+    echo "Waiting for $LABEL to be ready..."
 
     STARTUP_COMPLETED=
     TIMEOUT=300 # max 5 minutes
@@ -272,8 +319,7 @@ function tomcat_ready () {
     while [ $TIMER -lt $TIMEOUT ]; do
 
         if [ -r "$MAIN_LOG_FILE" ]; then
-	    grep 'Server startup' \
-                "$MAIN_LOG_FILE" >/dev/null
+	    grep "$SEARCHTXT" "$MAIN_LOG_FILE" >/dev/null
             if [ $? -eq 0 ]; then
                 # Found the message: assume it has started
                 # Is there might be a better (and accurate) way to do this?
@@ -290,7 +336,7 @@ function tomcat_ready () {
         return 0
     else
         echo
-        echo "Warning: timeout: Tomcat not fully running" >&2
+        echo "Warning: timeout: $LABEL not fully running" >&2
         return 1
     fi
 }
@@ -307,7 +353,7 @@ VERBOSE=
 getopt -T > /dev/null
 if [ $? -eq 4 ]; then
     # GNU enhanced getopt is available
-    ARGS=`getopt --name "$PROG" --long help,tmpdir,install,uninstall,verbose --options ht:iucv -- "$@"`
+    ARGS=`getopt --name "$PROG" --long help,tmpdir,install,uninstall,silent --options ht:iucs -- "$@"`
 else
     # Original getopt is available (no long option names, no whitespace, no sorting)
     ARGS=`getopt ht:iucv "$@"`
@@ -324,7 +370,7 @@ while [ $# -gt 0 ]; do
         -i | --install)      DO_INSTALL=yes;;
         -u | --uninstall)    DO_UNINSTALL=yes;;        
         -t | --tmpdir)       TMPDIR="$2"; shift;;
-        -v | --verbose)      VERBOSE=yes;;
+        -s | --silent)       VERBOSE=;;
         --)                  shift; break;; # end of options
     esac
     shift
@@ -336,7 +382,7 @@ if [ -n "$HELP" ]; then
     echo "  -i | --install     install ReDBox OAIPMH Harvester (default action)"
     echo "  -u | --uninstall   uninstall ReDBox OAIPMH Harvester "    
     echo "  -t | --tmpdir dir  directory for install files (default: $DEFAULT_TMPDIR)"
-    echo "  -v | --verbose     print extra information during execution"
+    echo "  -s | --silent      don't print extra information during execution"
     echo "  -h | --help        show this message"    
     exit 0
 fi
