@@ -9,6 +9,7 @@ This project is an implementation of a <a href='https://github.com/redbox-harves
 To quickly install the entire stack, there is installer script tested with <a href='http://nectar.org.au/'>"NeCTAR CentOS 6.5 x86_64"</a>. Of course, this script comes with certain assumptions specific to the image, so you are certainly encouraged to modify the script to meet your needs. Run the ff. commands as root:
 
     wget https://raw.github.com/redbox-harvester/redbox-oai-feed/master/support/install/redbox_oaipmh_feed.sh
+    chmod +x redbox_oaipmh_feed.sh 
     ./redbox_oaipmh_feed.sh 
  
 Grab a cuppa as the script downloads the internets and sets up the Harvester Manager and the OAI-PMH Feed. 
