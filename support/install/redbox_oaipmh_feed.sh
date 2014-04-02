@@ -33,6 +33,7 @@ PGSQL_ORIG_BASE=/var/lib/pgsql
 HARVESTER_WORK_DIR=".json-harvester-manager-production"
 OAISERVER_WORK_DIR=".oai-server"
 HARVESTER_MANAGER_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata&a=json-harvester-manager&v=LATEST&e=war"
+CURATION_MANAGER_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata&a=CurationManager&v=LATEST&e=war"
 OAISERVER_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata.oai&a=oai-server&v=LATEST&e=war"
 HARVESTER_CONFIG_SRC="https://raw.github.com/redbox-harvester/redbox-oai-feed/master/support/install"
 OAISERVER_CONFIG_SRC="https://raw.github.com/redbox-mint/oai-server/master/support/install"
@@ -42,6 +43,8 @@ OAISERVER_NGINX_CONFIG_FILE="oaiServer.conf"
 OAISERVER_NGINX_CONFIG_URL="$OAISERVER_CONFIG_SRC/$OAISERVER_NGINX_CONFIG_FILE"
 OAISERVER_INITSQL="init.sql"
 OAISERVER_USERSQL="user.sql"
+CURATION_MANAGER_CONFIG_SRC="https://raw.github.com/redbox-mint/curation-manager/master/support/install"
+CURATION_MANAGER_USERSQL="user-curationmanager.sql"
 HARVESTER_OAIPMH_FILE="redbox-oaipmh-feed.zip"
 HARVESTER_OAIPMH_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata.oai&a=redbox-oai-feed&v=LATEST&e=zip&c=bin"
 GROOVY_VERSION="2.2.2"
@@ -186,6 +189,8 @@ function install () {
     curl -L -o "$TOMCAT_HOME/webapps/oai-server.war" "$OAISERVER_URL" || die
     echo "Downloading JSON Harvester Manager: $HARVESTER_MANAGER_URL"
     curl -L -o "$TOMCAT_HOME/webapps/json-harvester-manager.war" "$HARVESTER_MANAGER_URL" || die
+    echo "Downloading Curation Manager: $CURATION_MANAGER_URL"
+    curl -L -o "$TOMCAT_HOME/webapps/CurationManager.war" "$CURATION_MANAGER_URL" || die    
     echo "Starting nginx..."
     service nginx start
     echo "Configuring nginx..."
@@ -201,10 +206,14 @@ function install () {
     curl -L -o $PGSQL_BASE/9.3/data/pg_hba.conf "$OAISERVER_CONFIG_SRC/pg_hba.conf"        
     service postgresql-9.3 start
     curl -L -O "$OAISERVER_CONFIG_SRC/$OAISERVER_USERSQL"
-    sudo -u postgres psql < $OAISERVER_USERSQL || die    
+    sudo -u postgres psql < $OAISERVER_USERSQL || die
+    curl -L -O "$CURATION_MANAGER_CONFIG_SRC/$CURATION_MANAGER_USERSQL"
+    sudo -u postgres psql < $CURATION_MANAGER_USERSQL || die    
     curl -L -O "$OAISERVER_CONFIG_SRC/$OAISERVER_INITSQL" || die
     export PGPASSWORD=oaiserver    
     psql -U oaiserver < $OAISERVER_INITSQL || die
+    echo "Configuring tomcat..."
+    echo "JAVA_OPTS='-XX:PermSize=64M -XX:MaxPermSize=512M'" >> /usr/share/tomcat7/conf/tomcat7.conf
     echo "Starting tomcat..."
     service tomcat7 start
     is_ready "$TOMCAT_HOME/logs/catalina.out" "Tomcat" "Server startup"     
