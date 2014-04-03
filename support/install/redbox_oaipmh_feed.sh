@@ -50,13 +50,20 @@ HARVESTER_OAIPMH_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/a
 GROOVY_VERSION="2.2.2"
 GROOVY_INSTALL_URL="http://dl.bintray.com/groovy/maven/groovy-binary-$GROOVY_VERSION.zip"
 GROOVY_INSTALL_DIR="/opt/groovy"
-SAMPLE_RECORD_SCRIPT="$HARVESTER_CONFIG_SRC/addSampleEacRecord.groovy"
+SAMPLE_RECORD_SCRIPT="addSampleEacRecord.groovy"
 ORACLE_JDK_URL="http://dev.redboxresearchdata.com.au/jdk/jdk-7u51-linux-x64.rpm"
+CURATION_MANAGER_WORKDIR="/var/local/curationmanager/"
+CURATION_MANAGER_HANDLEKEY_URL="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/handle/admpriv.bin"
+CURATION_MANAGER_IDP_1="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/asynchronousSchedule.properties"
+CURATION_MANAGER_IDP_2="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/handleIdentityProviderConf.properties"
+CURATION_MANAGER_IDP_3="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/localIdentityProviderConf.properties"
+CURATION_MANAGER_IDP_4="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/nlaIdentityProviderConf.properties"
+CURATION_MANAGER_IDP_5="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/orcIdentityProviderConf.properties"
 # Sniffing OS...
 if [ -e "/etc/redhat-release" ]; then
     echo "Detected a CENTOS/Fedora/RHEL distro..."
     if [ -n "$VERBOSE" ]; then 
-        YUM_VERBOSE=
+        YUM_VERBOSE=                           
     else
         YUM_VERBOSE="--quiet"
     fi    
@@ -182,6 +189,9 @@ function install () {
     sudo -u tomcat mkdir "$BASE_DIR/$OAISERVER_WORK_DIR" 
     ln -s "$BASE_DIR/$HARVESTER_WORK_DIR" "$TOMCAT_HOME/$HARVESTER_WORK_DIR"
     ln -s "$BASE_DIR/$OAISERVER_WORK_DIR" "$TOMCAT_HOME/$OAISERVER_WORK_DIR"
+    rm -rf $CURATION_MANAGER_WORKDIR
+    mkdir $CURATION_MANAGER_WORKDIR
+    chown tomcat:tomcat $CURATION_MANAGER_WORKDIR 
     
     #----------------    
     echo "Installing ReDBox OAI-PMH Harvester"                
@@ -190,7 +200,17 @@ function install () {
     echo "Downloading JSON Harvester Manager: $HARVESTER_MANAGER_URL"
     curl -L -o "$TOMCAT_HOME/webapps/json-harvester-manager.war" "$HARVESTER_MANAGER_URL" || die
     echo "Downloading Curation Manager: $CURATION_MANAGER_URL"
-    curl -L -o "$TOMCAT_HOME/webapps/CurationManager.war" "$CURATION_MANAGER_URL" || die    
+    curl -L -o "$TOMCAT_HOME/webapps/CurationManager.war" "$CURATION_MANAGER_URL" || die
+    echo "Downloading Curation Manager IDP config..."
+    cd $CURATION_MANAGER_WORKDIR 
+    curl -L -O $CURATION_MANAGER_HANDLEKEY_URL
+    curl -L -O $CURATION_MANAGER_IDP_1
+    curl -L -O $CURATION_MANAGER_IDP_2
+    curl -L -O $CURATION_MANAGER_IDP_3
+    curl -L -O $CURATION_MANAGER_IDP_4
+    curl -L -O $CURATION_MANAGER_IDP_5
+    chown -R tomcat:tomcat $CURATION_MANAGER_WORKDIR
+    cd -
     echo "Starting nginx..."
     service nginx start
     echo "Configuring nginx..."
@@ -232,7 +252,8 @@ function install () {
     curl "http://localhost/oai-server/?verb=ListMetadataFormats"
     is_ready "$TOMCAT_HOME/logs/catalina.out" "OAIServer" "Update cycle finished"    
     curl "http://localhost/oai-server/?verb=ListMetadataFormats"
-    wget $SAMPLE_RECORD_SCRIPT
+    rm -rf $SAMPLE_RECORD_SCRIPT     
+    wget "$HARVESTER_CONFIG_SRC/$SAMPLE_RECORD_SCRIPT"
     echo "---------All done!----------"
     echo "You may want to optionally install sample records by running 'groovy addSampleEacRecord.groovy'"                                                    
 }
