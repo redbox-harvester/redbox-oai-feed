@@ -26,7 +26,7 @@ class GroovyJMSExample {
                                   "recordId":"d082b0890570265c99b52f360a674112",
                                   "control":{
                                      "maintenanceAgency":{
-                                        "agencyCode":"QQCIF",
+                                        "agencyCode":"AU-QQCIF",
                                         "agencyName":"Queensland Cyber Infrastructure Foundation"
                                      },
                                      "maintenanceHistory":{
