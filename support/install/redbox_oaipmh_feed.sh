@@ -59,6 +59,7 @@ CURATION_MANAGER_IDP_2="https://github.com/redbox-mint/curation-manager/raw/mast
 CURATION_MANAGER_IDP_3="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/localIdentityProviderConf.properties"
 CURATION_MANAGER_IDP_4="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/nlaIdentityProviderConf.properties"
 CURATION_MANAGER_IDP_5="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/identityProdiverServiceProperties/orcIdentityProviderConf.properties"
+CURATION_MANAGER_RESOURCE="https://raw.githubusercontent.com/redbox-mint/curation-manager/master/grails-app/conf/spring/resource.xml"
 # Sniffing OS...
 if [ -e "/etc/redhat-release" ]; then
     echo "Detected a CENTOS/Fedora/RHEL distro..."
@@ -209,6 +210,7 @@ function install () {
     curl -L -O $CURATION_MANAGER_IDP_3
     curl -L -O $CURATION_MANAGER_IDP_4
     curl -L -O $CURATION_MANAGER_IDP_5
+    curl -L -O $CURATION_MANAGER_RESOURCE
     chown -R tomcat:tomcat $CURATION_MANAGER_WORKDIR
     cd -
     echo "Starting nginx..."
