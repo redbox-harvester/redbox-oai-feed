@@ -12,7 +12,7 @@ class GroovyJMSExample {
                     def txt = """
                     {
                          "header":{
-                            "type":"record_people"
+                            "type":"record_person"
                          },
                          "data":[
                             {

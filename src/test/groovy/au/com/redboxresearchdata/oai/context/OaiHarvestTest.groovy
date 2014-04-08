@@ -106,7 +106,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		def mdPrefix = ["eac-cpf", "oai_dc"]
 		def jsonMapData = [
 			"header":[
-				"type":"record_people"
+				"type":"record_person"
 			],			
 			"data":[
 				[

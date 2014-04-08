@@ -89,7 +89,7 @@ Configuration file for accepting Oai-pmh publish requests.
 		<int:mapping value="metadataFormat" channel="oaiVelocityChannel" />
 		<int:mapping value="set" channel="oaiVelocityChannel" />
 		<int:mapping value="identify" channel="oaiVelocityChannel" />
-		<int:mapping value="record_people" channel="oaiRecordSplitterChannel" />
+		<int:mapping value="record_person" channel="oaiRecordSplitterChannel" />
 	</int:header-value-router>
 	<int:splitter ref="cloningSplitter" method="cloneByArray" input-channel="oaiRecordSplitterChannel" output-channel="oaiVelocityChannel"/>
 	
@@ -99,8 +99,8 @@ Configuration file for accepting Oai-pmh publish requests.
 	<!--  route to DB persisitence, depending on type -->
 	<int:header-value-router header-name="type" input-channel="oaiHarvestRoutingChannel" default-output-channel="oaiInvalidTypeChannel">
 			<int:mapping value="metadataFormat" channel="oaiMetadataFormatOutboundChannel" />
-			<int:mapping value="record_people_eac-cpf" channel="oaiRecordOutboundChannel" />
-			<int:mapping value="record_people_oai_dc" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_person_eac-cpf" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_person_oai_dc" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="identify" channel="oaiIdentifyOutboundChannel" />
 			<int:mapping value="set" channel="oaiSetOutboundChannel" />
 	</int:header-value-router>

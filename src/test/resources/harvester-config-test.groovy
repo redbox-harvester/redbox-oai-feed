@@ -76,14 +76,14 @@ environments {
 			metadataFormat {
 				templates = []
 			}
-			record_people_eac_cpf {
-				templates = ["people/eac-cpf.vm"]
+			record_person_eac_cpf {
+				templates = ["person/eac-cpf.vm"]
 				scripts {
 					preVelocity = [["velocityTransformer-stringUtils.groovy":""]]
 				}
 			}
-			record_people_oai_dc {
-				templates = ["people/oai_dc.vm"]
+			record_person_oai_dc {
+				templates = ["person/oai_dc.vm"]
 				scripts {
 					preVelocity = [["velocityTransformer-stringUtils.groovy":""]]
 				}
