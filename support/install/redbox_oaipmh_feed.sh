@@ -235,7 +235,7 @@ function install () {
     export PGPASSWORD=oaiserver    
     psql -U oaiserver < $OAISERVER_INITSQL || die
     echo "Configuring tomcat..."
-    echo "JAVA_OPTS='-XX:PermSize=64M -XX:MaxPermSize=512M'" >> /usr/share/tomcat7/conf/tomcat7.conf
+    echo "JAVA_OPTS='-XX:PermSize=64M -XX:MaxPermSize=512M' -DcmConfigPath=/var/local/curationmanager/" >> /usr/share/tomcat7/conf/tomcat7.conf
     echo "Starting tomcat..."
     service tomcat7 start
     is_ready "$TOMCAT_HOME/logs/catalina.out" "Tomcat" "Server startup"     
