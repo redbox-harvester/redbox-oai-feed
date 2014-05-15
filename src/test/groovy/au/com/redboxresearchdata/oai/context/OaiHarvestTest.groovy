@@ -98,79 +98,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		assertEquals(row.schemaTxt, schemaTxt)
 		assertEquals(row.metadataNamespace, metadataNamespace)
 		logger.info("Metadataformat passed.")
-		logger.info("Testing Record")
-		logger.info("Creating DB table:${config.harvest.sql.record.init}")
-		sql.execute(config.harvest.sql.record.init)
-		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
-		def recordId = "record-1: a unique DB identifier, could be OID"
-		def mdPrefix = ["eac-cpf", "oai_dc"]
-		def jsonMapData = [
-			"header":[
-				"type":"record_person"
-			],			
-			"data":[
-				[
-					"recordId":recordId,
-					"metadataPrefix":mdPrefix,
-					"source":recordSource,
-					"jsonData":[			
-						"recordId":"d082b0890570265c99b52f360a674112",
-						"control":[			
-							"maintenanceAgency":["agencyCode":"TO-DO", "agencyName":"The University of Examples, Australia"],
-							"maintenanceHistory":[
-									"maintenanceEvent":[
-										"eventDateTime_standardDateTime":"",
-										"agent":"Mint Name Authority - The University of Examples, Australia"
-									]
-							]
-						],
-						"entityId":"http://demo.redboxresearchdata.com.au/mint/published/detail/d082b0890570265c99b52f360a674112",
-						"surname":"Zweinstein",
-						"forename":"Alberto",
-						"salutation":"Mr",
-						"description":"Dr Alberto Zweinstein is a Lecturer at the University of Examples",
-						"dateStamp":"2014-03-18T06:09:03Z"						
-					]
-				]
-			]				
-		]		
-		request = new JsonBuilder(jsonMapData).toString()
-		logger.info("Sending Record message....")
-		logger.debug(request)
-		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
-		logger.info("Validating Record....")
-		def rows = sql.rows(config.harvest.sql.record.select, [recordId])
-		rows.each {rowEntry->
-			assertNotNull(rowEntry)		
-			assertEquals(recordId, rowEntry.recordId)
-			assertEquals(recordSource, rowEntry.source)
-	//		assertEquals(metadataPrefix, rowEntry.metadataPrefix)
-			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)		
-			assertNotNull(rowEntry.xmlEntry)
-			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
-			// validating header..
-			assertEquals(jsonMapData.data[0].jsonData.entityId, parsedXml.header.identifier.toString())
-			assertEquals(jsonMapData.data[0].jsonData.dateStamp, parsedXml.header.datestamp.toString())
-			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
-			if ("eac-cpf" == rowEntry.metadataPrefix) {		
-				def eacCpf = parsedXml.metadata["eac-cpf"]
-				assertEquals(jsonMapData.data[0].jsonData.recordId, eacCpf.control.recordId.toString())
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyCode, eacCpf.control.maintenanceAgency.agencyCode.toString())
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyName, eacCpf.control.maintenanceAgency.agencyName.toString())		
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.eventDateTime_standardDateTime, eacCpf.control.maintenanceHistory.maintenanceEvent.eventDateTime.@standardDateTime.toString())
-				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.agent, eacCpf.control.maintenanceHistory.maintenanceEvent.agent.toString())
-				assertEquals(jsonMapData.data[0].jsonData.entityId, eacCpf.cpfDescription.identity.entityId.toString())
-				assertEquals(jsonMapData.data[0].jsonData.surname, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "surname"}[0].toString())
-				assertEquals(jsonMapData.data[0].jsonData.forename, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "forename"}[0].toString())
-				assertEquals(jsonMapData.data[0].jsonData.description, eacCpf.cpfDescription.description.biogHist.abstract.toString())
-			}
-			if ("oai_dc" == rowEntry.metadataPrefix) {
-				def oaiDc = parsedXml.metadata["dc"]
-				assertEquals("${jsonMapData.data[0].jsonData.salutation} ${jsonMapData.data[0].jsonData.forename} ${jsonMapData.data[0].jsonData.surname}", oaiDc["title"].toString())
-				assertEquals(jsonMapData.data[0].jsonData.description, oaiDc["description"].toString())
-			}
-		}
-		logger.info("Record passed.")
+	  
 		logger.info("Testing Identity")
 		logger.info("Creating DB table:${config.harvest.sql.identify.init}")
 		sql.execute(config.harvest.sql.identify.init)
@@ -219,6 +147,144 @@ class OaiHarvestTest extends GroovyTestCase {
 		assertNotNull(row)
 		assertEquals(xmlEntry.toString(), row.xmlEntry)
 		assertEquals(spec, row.spec)
+		
+		logger.info("Testing Record")
+		logger.info("Testing CurationManager data feed.....People")
+		logger.info("Creating DB table:${config.harvest.sql.record.init}")
+		sql.execute(config.harvest.sql.record.init)
+		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
+		def recordId = "record-1: a unique DB identifier, could be OID"
+		def mdPrefix = ["eac-cpf", "oai_dc"]
+		def jsonMapData = [
+			"header":[
+				"type":"record_person"
+			],
+			"data":[
+				[
+					"recordId":recordId,
+					"metadataPrefix":mdPrefix,
+					"source":recordSource,
+					"jsonData":[
+						"recordId":"d082b0890570265c99b52f360a674112",
+						"control":[
+							"maintenanceAgency":["agencyCode":"TO-DO", "agencyName":"The University of Examples, Australia"],
+							"maintenanceHistory":[
+									"maintenanceEvent":[
+										"eventDateTime_standardDateTime":"",
+										"agent":"Mint Name Authority - The University of Examples, Australia"
+									]
+							]
+						],
+						"entityId":"http://demo.redboxresearchdata.com.au/mint/published/detail/d082b0890570265c99b52f360a674112",
+						"surname":"Zweinstein",
+						"forename":"Alberto",
+						"salutation":"Mr",
+						"description":"Dr Alberto Zweinstein is a Lecturer at the University of Examples",
+						"dateStamp":"2014-03-18T06:09:03Z"
+					]
+				]
+			]
+		]
+		request = new JsonBuilder(jsonMapData).toString()
+		logger.info("Sending Record message....")
+		logger.debug(request)
+		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
+		logger.info("Validating Record....")
+		def rows = sql.rows(config.harvest.sql.record.select, [recordId])
+		rows.each {rowEntry->
+			assertNotNull(rowEntry)
+			assertEquals(recordId, rowEntry.recordId)
+			assertEquals(recordSource, rowEntry.source)
+	//		assertEquals(metadataPrefix, rowEntry.metadataPrefix)
+			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)
+			assertNotNull(rowEntry.xmlEntry)
+			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].jsonData.entityId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].jsonData.dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
+			if ("eac-cpf" == rowEntry.metadataPrefix) {
+				def eacCpf = parsedXml.metadata["eac-cpf"]
+				assertEquals(jsonMapData.data[0].jsonData.recordId, eacCpf.control.recordId.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyCode, eacCpf.control.maintenanceAgency.agencyCode.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceAgency.agencyName, eacCpf.control.maintenanceAgency.agencyName.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.eventDateTime_standardDateTime, eacCpf.control.maintenanceHistory.maintenanceEvent.eventDateTime.@standardDateTime.toString())
+				assertEquals(jsonMapData.data[0].jsonData.control.maintenanceHistory.maintenanceEvent.agent, eacCpf.control.maintenanceHistory.maintenanceEvent.agent.toString())
+				assertEquals(jsonMapData.data[0].jsonData.entityId, eacCpf.cpfDescription.identity.entityId.toString())
+				assertEquals(jsonMapData.data[0].jsonData.surname, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "surname"}[0].toString())
+				assertEquals(jsonMapData.data[0].jsonData.forename, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType =~ "forename"}[0].toString())
+				assertEquals(jsonMapData.data[0].jsonData.description, eacCpf.cpfDescription.description.biogHist.abstract.toString())
+			}
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				def oaiDc = parsedXml.metadata["dc"]
+				
+				assertEquals("${jsonMapData.data[0].jsonData.salutation} ${jsonMapData.data[0].jsonData.forename} ${jsonMapData.data[0].jsonData.surname}", oaiDc["title"].toString())
+				assertEquals(jsonMapData.data[0].jsonData.description, oaiDc["description"].toString())
+			}
+		}
+		
+		logger.info("Testing for RB/Mint Data feed......People")
+		recordId = "Unique ID - People"
+		mdPrefix = ["oai_dc"]
+		jsonMapData = [
+			"header":[
+				"type":"record_people"
+			],
+			"data":[
+				[
+					"recordId":recordId,
+					"dateStamp":"2014-03-18T06:09:03Z",
+					"metadataPrefix":mdPrefix,
+					"source":recordSource,
+					"metadata": [
+						"data":[
+							"Honorific":"Mr",
+							"Given_Name":"Given",
+							"Family_Name":"Family"
+						]
+					],
+					"objectMetadata":[
+						"recordId":recordId
+					],
+					"constants": [
+						"oai_dc": [
+							"curation":["pidProperty":"recordId"]
+						]
+					]
+				]
+			]
+		]
+		request = new JsonBuilder(jsonMapData).toString()
+		logger.info("Sending Record message....")
+		logger.debug(request)
+		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
+		logger.info("Validating Record....")
+		rows = sql.rows(config.harvest.sql.record.select, [recordId])
+		rows.each {rowEntry->
+			assertNotNull(rowEntry)
+			assertEquals(recordId, rowEntry.recordId)
+			assertEquals(recordSource, rowEntry.source)
+			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)
+			assertNotNull(rowEntry.xmlEntry)
+			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].recordId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
+			if ("eac-cpf" == rowEntry.metadataPrefix) {
+				def eacCpf = parsedXml.metadata["eac-cpf"]
+				
+			}
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				def oaiDc = parsedXml.metadata["dc"]
+				assertEquals(jsonMapData.data[0].recordId, oaiDc["identifier"].toString())
+				String name = "${jsonMapData.data[0].metadata.data.Honorific} ${jsonMapData.data[0].metadata.data.Given_Name} ${jsonMapData.data[0].metadata.data.Family_Name}"
+				assertEquals(name, oaiDc["title"].toString())
+				assertEquals("'Parties' entry for '$name'", oaiDc["description"].toString())
+			}
+		}
+		
+		logger.info("Testing Record passed.")
 		
 		logger.info("Test success! Shutting down SI...")
 		def mbeanExporter = appContext.getBean("mbeanExporterOaiFeed")

@@ -57,6 +57,7 @@ environments {
 					init = "CREATE TABLE provider_records (id INT not null GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), metadataPrefix varchar(1024), recordId varchar(1024), source VARCHAR(32000), xmlEntry VARCHAR(32000))"
 					insert = "INSERT INTO provider_records (metadataPrefix, source, recordId, xmlEntry) VALUES (:metadataPrefix,:source,:recordId,:xmlEntry)"
 					select = "SELECT * FROM provider_records WHERE recordId=?"
+					delete = "DELETE FROM provider_records WHERE recordId=:recordId AND metadataPrefix=:metadataPrefix"
 				} 
 				identify {
 					init = "CREATE TABLE provider_identity (id INT not null GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), xmlEntry VARCHAR(32000))"
@@ -86,6 +87,12 @@ environments {
 				templates = ["person/oai_dc.vm"]
 				scripts {
 					preVelocity = [["velocityTransformer-stringUtils.groovy":""]]
+				}
+			}
+			record_people_oai_dc {
+				templates = ["people/oai_dc.vm", "people/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
 				}
 			}
 		}

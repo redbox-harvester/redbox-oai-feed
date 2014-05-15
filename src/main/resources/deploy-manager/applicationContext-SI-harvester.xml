@@ -67,6 +67,11 @@ Configuration file for accepting Oai-pmh publish requests.
 			<int:wire-tap channel="mainloggingChannel" />
 		</int:interceptors>
 	</int:channel>
+	<int:channel id="oaiRecordInsertChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
 	<int:channel id="oaiIdentifyOutboundChannel">
 		<int:interceptors>
 			<int:wire-tap channel="mainloggingChannel" />
@@ -90,6 +95,7 @@ Configuration file for accepting Oai-pmh publish requests.
 		<int:mapping value="set" channel="oaiVelocityChannel" />
 		<int:mapping value="identify" channel="oaiVelocityChannel" />
 		<int:mapping value="record_person" channel="oaiRecordSplitterChannel" />
+		<int:mapping value="record_people" channel="oaiRecordSplitterChannel" />
 	</int:header-value-router>
 	<int:splitter ref="cloningSplitter" method="cloneByArray" input-channel="oaiRecordSplitterChannel" output-channel="oaiVelocityChannel"/>
 	
@@ -99,14 +105,16 @@ Configuration file for accepting Oai-pmh publish requests.
 	<!--  route to DB persisitence, depending on type -->
 	<int:header-value-router header-name="type" input-channel="oaiHarvestRoutingChannel" default-output-channel="oaiInvalidTypeChannel">
 			<int:mapping value="metadataFormat" channel="oaiMetadataFormatOutboundChannel" />
-			<int:mapping value="record_person_eac-cpf" channel="oaiRecordOutboundChannel" />
-			<int:mapping value="record_person_oai_dc" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="identify" channel="oaiIdentifyOutboundChannel" />
 			<int:mapping value="set" channel="oaiSetOutboundChannel" />
+			<int:mapping value="record_person_eac-cpf" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_person_oai_dc" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_people_oai_dc" channel="oaiRecordOutboundChannel" />
 	</int:header-value-router>
 										
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiMetadataFormatOutboundChannel" query="${harvest.sql.metadata.insert}" sql-parameter-source-factory="spelSource_metadataFormat"/> 			
-	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordOutboundChannel" query="${harvest.sql.record.insert}" sql-parameter-source-factory="spelSource_record"/>
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordOutboundChannel" query="${harvest.sql.record.delete}" sql-parameter-source-factory="spelSource_record"/>
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordInsertChannel" query="${harvest.sql.record.insert}" sql-parameter-source-factory="spelSource_record"/>
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiIdentifyOutboundChannel" query="${harvest.sql.identify.insert}" sql-parameter-source-factory="spelSource_identify"/>
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiSetOutboundChannel" query="${harvest.sql.set.insert}" sql-parameter-source-factory="spelSource_set"/>
 

@@ -11,6 +11,7 @@
           xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" 
           xmlns:dc="http://purl.org/dc/elements/1.1/">
       
+        <dc:identifier>$stringUtil.encodeXml($data.get('jsonData').get('entityId'))</dc:identifier>
         <dc:title>$stringUtil.escapeXml($data.get('jsonData').get('salutation')) $stringUtil.escapeXml($data.get('jsonData').get('forename')) $stringUtil.escapeXml($data.get('jsonData').get('surname'))</dc:title>         
         <dc:description>$stringUtil.escapeXml($data.get('jsonData').get('description'))</dc:description> 
       

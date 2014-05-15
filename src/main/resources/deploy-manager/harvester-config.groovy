@@ -53,6 +53,7 @@ environments {
 				}
 				record {
 					insert = "INSERT INTO provider_records (metadataPrefix, source, recordId, xmlEntry) VALUES (:metadataPrefix,:source,:recordId,:xmlEntry)"
+					delete = "DELETE FROM provider_records WHERE recordId=:recordId AND metadataPrefix=:metadataPrefix"
 				} 
 				identify {
 					insert = "INSERT INTO provider_identity (xmlEntry) VALUES (:xmlEntry)"
@@ -78,6 +79,12 @@ environments {
 				templates = ["person/oai_dc.vm"]
 				scripts {
 					preVelocity = [["velocityTransformer-stringUtils.groovy":""]]
+				}
+			}
+			record_people_oai_dc {
+				templates = ["people/oai_dc.vm", "people/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
 				}
 			}
 		}
