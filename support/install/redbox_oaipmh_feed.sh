@@ -257,7 +257,7 @@ function install () {
     rm -rf $SAMPLE_RECORD_SCRIPT     
     wget "$HARVESTER_CONFIG_SRC/$SAMPLE_RECORD_SCRIPT"
     echo "---------All done!----------"
-    echo "You may want to optionally install sample records by running 'groovy addSampleEacRecord.groovy'"                                                    
+    echo "You may want to optionally install sample records by running 'groovy addSampleRecord.groovy $OAISERVER_CONFIG_SRC/sampleCurationManagerEacPerson.json'"                                                    
 }
 
 
