@@ -113,10 +113,9 @@ Configuration file for accepting Oai-pmh publish requests.
 	</int:header-value-router>
 										
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiMetadataFormatOutboundChannel" query="${harvest.sql.metadata.insert}" sql-parameter-source-factory="spelSource_metadataFormat"/> 			
-	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordOutboundChannel" query="${harvest.sql.record.delete}" sql-parameter-source-factory="spelSource_record"/>
-	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordInsertChannel" query="${harvest.sql.record.insert}" sql-parameter-source-factory="spelSource_record"/>
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiIdentifyOutboundChannel" query="${harvest.sql.identify.insert}" sql-parameter-source-factory="spelSource_identify"/>
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiSetOutboundChannel" query="${harvest.sql.set.insert}" sql-parameter-source-factory="spelSource_set"/>
+	<int-jdbc:outbound-gateway data-source="dataSource" request-channel="oaiRecordOutboundChannel" reply-channel="oaiRecordInsertChannel" update="${harvest.sql.record.delete}" query="${harvest.sql.record.insert}" request-sql-parameter-source-factory="spelSource_record" reply-sql-parameter-source-factory="spelSource_record"/>
 
 	<int:logging-channel-adapter id="mainloggingChannel"
 		expression="'Record headers:' + headers" />
@@ -155,11 +154,6 @@ Configuration file for accepting Oai-pmh publish requests.
 		<property name="defaultEnvironment" value="production" />
 		<property name="config" value="#{grailsApplication.config.get('clientConfigObj')}" />
 	</bean>			
-	
-	<!-- 
-	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory" init-method="start">
-        <property name="brokerURL" value="${activemq.url}" />
-    </bean> -->
    
 	<bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
 		<property name="targetConnectionFactory">

@@ -52,7 +52,7 @@ environments {
 					insert = "INSERT INTO provider_metadataformat (metadataPrefix, schemaTxt, metadataNamespace) VALUES (:metadataPrefix, :schemaTxt, :metadataNamespace);"
 				}
 				record {
-					insert = "INSERT INTO provider_records (metadataPrefix, source, recordId, xmlEntry) VALUES (:metadataPrefix,:source,:recordId,:xmlEntry)"
+					insert = "INSERT INTO provider_records (metadataPrefix, source, recordId, xmlEntry)  VALUES (:metadataPrefix, :source, :recordId, :xmlEntry)"
 					delete = "DELETE FROM provider_records WHERE recordId=:recordId AND metadataPrefix=:metadataPrefix"
 				} 
 				identify {

@@ -35,22 +35,22 @@ OAISERVER_WORK_DIR=".oai-server"
 HARVESTER_MANAGER_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata&a=json-harvester-manager&v=LATEST&e=war"
 CURATION_MANAGER_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata&a=CurationManager&v=LATEST&e=war"
 OAISERVER_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata.oai&a=oai-server&v=LATEST&e=war"
-HARVESTER_CONFIG_SRC="https://raw.github.com/redbox-harvester/redbox-oai-feed/master/support/install"
-OAISERVER_CONFIG_SRC="https://raw.github.com/redbox-mint/oai-server/master/support/install"
+HARVESTER_CONFIG_SRC="https://raw.githubusercontent.com/redbox-harvester/redbox-oai-feed/master/support/install"
+OAISERVER_CONFIG_SRC="https://raw.githubusercontent.com/redbox-mint/oai-server/master/support/install"
 HARVESTER_NGINX_CONFIG_FILE="jsonHarvesterManager.conf"
 HARVESTER_NGINX_CONFIG_URL="$HARVESTER_CONFIG_SRC/$HARVESTER_NGINX_CONFIG_FILE"
 OAISERVER_NGINX_CONFIG_FILE="oaiServer.conf"
 OAISERVER_NGINX_CONFIG_URL="$OAISERVER_CONFIG_SRC/$OAISERVER_NGINX_CONFIG_FILE"
 OAISERVER_INITSQL="init.sql"
 OAISERVER_USERSQL="user.sql"
-CURATION_MANAGER_CONFIG_SRC="https://raw.github.com/redbox-mint/curation-manager/master/support/install"
+CURATION_MANAGER_CONFIG_SRC="https://raw.githubusercontent.com/redbox-mint/curation-manager/master/support/install"
 CURATION_MANAGER_USERSQL="user-curationmanager.sql"
 HARVESTER_OAIPMH_FILE="redbox-oaipmh-feed.zip"
 HARVESTER_OAIPMH_URL="http://dev.redboxresearchdata.com.au/nexus/service/local/artifact/maven/redirect?r=snapshots&g=au.com.redboxresearchdata.oai&a=redbox-oai-feed&v=LATEST&e=zip&c=bin"
 GROOVY_VERSION="2.2.2"
 GROOVY_INSTALL_URL="http://dl.bintray.com/groovy/maven/groovy-binary-$GROOVY_VERSION.zip"
 GROOVY_INSTALL_DIR="/opt/groovy"
-SAMPLE_RECORD_SCRIPT="addSampleEacRecord.groovy"
+SAMPLE_RECORD_SCRIPT="addSampleRecord.groovy"
 ORACLE_JDK_URL="http://dev.redboxresearchdata.com.au/jdk/jdk-7u51-linux-x64.rpm"
 CURATION_MANAGER_WORKDIR="/var/local/curationmanager/"
 CURATION_MANAGER_HANDLEKEY_URL="https://github.com/redbox-mint/curation-manager/raw/master/web-app/WEB-INF/conf/spring/handle/admpriv.bin"
@@ -69,10 +69,11 @@ if [ -e "/etc/redhat-release" ]; then
         YUM_VERBOSE="--quiet"
     fi    
     REQUIRED_CMDS="curl yum adduser"
-    REQUIRED_APPS="tomcat7 tomcat7-admin-webapps nginx postgresql93-server unzip"
+    REQUIRED_APPS="nginx postgresql93-server unzip"
     INSTALL_CMD="yum install -y $YUM_VERBOSE"
-    TOMCAT_HOME="/usr/share/tomcat7"
-    TOMCAT_WEBAPP_DIR="/var/lib/tomcat7/webapps/"    
+    TOMCAT_HOME="/opt/tomcat7"
+    TOMCAT_USER_HOME="/home/tomcat"
+    TOMCAT_WEBAPP_DIR="/opt/tomcat7/webapps/"    
 else
     echo "This OS is not supported yet."
     exit 1        
@@ -91,7 +92,7 @@ function die () {
 function install_apps () {   
     rpm -ivh http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm 
     yum install -y yum-priorities 
-    rpm -ivh http://mirrors.dotsrc.org/jpackage/6.0/generic/free/RPMS/jpackage-release-6-3.jpp6.noarch.rpm             
+    #rpm -ivh http://mirrors.dotsrc.org/jpackage/6.0/generic/free/RPMS/jpackage-release-6-3.jpp6.noarch.rpm             
     echo "Checking for $REQUIRED_APPS installations..."    
     for PACKAGE in $REQUIRED_APPS; do
 	rpm -q $PACKAGE >/dev/null 2>&1    
@@ -126,7 +127,17 @@ function install_apps () {
         unzip groovy-binary-$GROOVY_VERSION.zip
         ln -s "${GROOVY_INSTALL_DIR}/groovy-${GROOVY_VERSION}/bin/groovy" /usr/bin/groovy          
         cd -                  	    
-  	fi            
+  	fi
+  	#------- Manually install tomcat
+  	useradd tomcat
+    wget http://dev.redboxresearchdata.com.au/jdk/apache-tomcat-7.0.22.tar.gz
+    tar xzf apache-tomcat-7.0.22.tar.gz
+    mv apache-tomcat-7.0.22 $TOMCAT_HOME
+   	curl -o /etc/init.d/tomcat7 $OAISERVER_CONFIG_SRC/tomcat7
+   	chmod +x /etc/init.d/tomcat7
+   	curl -o $TOMCAT_HOME/bin/setenv.sh $OAISERVER_CONFIG_SRC/setenv.sh
+   	chmod +x $TOMCAT_HOME/bin/setenv.sh
+   	chown -R tomcat:tomcat $TOMCAT_HOME
 }
 #----------------------------------------------------------------
 # Uninstall Required apps
@@ -138,6 +149,9 @@ function uninstall_apps () {
 	echo "Uninstalling package: $PACKAGE "
 	yum erase -y $YUM_VERBOSE $PACKAGE || die
     done
+    
+    service tomcat7 stop
+    rm -rf $TOMCAT_HOME
 }
 
 #----------------------------------------------------------------
@@ -177,7 +191,7 @@ function install () {
     mkdir $TMPDIR
     cd $TMPDIR
     mkdir $MNT_DIR
-    chown tomcat $MNT_DIR
+    chown tomcat:tomcat $MNT_DIR
     chmod o+w $MNT_DIR 
     ln -s $MNT_DIR $BASE_DIR                    
 
@@ -188,8 +202,8 @@ function install () {
     echo "Creating app work dirs.."
     sudo -u tomcat mkdir "$BASE_DIR/$HARVESTER_WORK_DIR"
     sudo -u tomcat mkdir "$BASE_DIR/$OAISERVER_WORK_DIR" 
-    ln -s "$BASE_DIR/$HARVESTER_WORK_DIR" "$TOMCAT_HOME/$HARVESTER_WORK_DIR"
-    ln -s "$BASE_DIR/$OAISERVER_WORK_DIR" "$TOMCAT_HOME/$OAISERVER_WORK_DIR"
+    ln -s "$BASE_DIR/$HARVESTER_WORK_DIR" "$TOMCAT_USER_HOME/$HARVESTER_WORK_DIR"
+    ln -s "$BASE_DIR/$OAISERVER_WORK_DIR" "$TOMCAT_USER_HOME/$OAISERVER_WORK_DIR"
     rm -rf $CURATION_MANAGER_WORKDIR
     mkdir $CURATION_MANAGER_WORKDIR
     chown tomcat:tomcat $CURATION_MANAGER_WORKDIR 
@@ -234,8 +248,6 @@ function install () {
     curl -L -O "$OAISERVER_CONFIG_SRC/$OAISERVER_INITSQL" || die
     export PGPASSWORD=oaiserver    
     psql -U oaiserver < $OAISERVER_INITSQL || die
-    echo "Configuring tomcat..."
-    echo "JAVA_OPTS='-XX:PermSize=64M -XX:MaxPermSize=512M' -DcmConfigPath=/var/local/curationmanager/" >> /usr/share/tomcat7/conf/tomcat7.conf
     echo "Starting tomcat..."
     service tomcat7 start
     is_ready "$TOMCAT_HOME/logs/catalina.out" "Tomcat" "Server startup"     
@@ -257,7 +269,7 @@ function install () {
     rm -rf $SAMPLE_RECORD_SCRIPT     
     wget "$HARVESTER_CONFIG_SRC/$SAMPLE_RECORD_SCRIPT"
     echo "---------All done!----------"
-    echo "You may want to optionally install sample records by running 'groovy addSampleRecord.groovy $OAISERVER_CONFIG_SRC/sampleCurationManagerEacPerson.json'"                                                    
+    echo "You may want to optionally install sample records by running 'groovy addSampleRecord.groovy $HARVESTER_CONFIG_SRC/sampleCurationManagerEacPerson.json'"                                                    
 }
 
 
