@@ -53,7 +53,10 @@ environments {
 				}
 				record {
 					insert = "INSERT INTO provider_records (metadataPrefix, source, recordId, xmlEntry)  VALUES (:metadataPrefix, :source, :recordId, :xmlEntry)"
+					select = "SELECT * FROM provider_records WHERE recordId=:recordId"
 					delete = "DELETE FROM provider_records WHERE recordId=:recordId AND metadataPrefix=:metadataPrefix"
+					update = "UPDATE provider_records SET xmlEntry=:xmlEntry, source=:source WHERE recordId=:recordId AND metadataPrefix=:metadataPrefix"
+					nullupdate = "UPDATE provider_records SET xmlEntry='' WHERE recordId='NULL'"
 				} 
 				identify {
 					insert = "INSERT INTO provider_identity (xmlEntry) VALUES (:xmlEntry)"

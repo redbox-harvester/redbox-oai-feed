@@ -147,8 +147,9 @@ class OaiHarvestTest extends GroovyTestCase {
 		assertNotNull(row)
 		assertEquals(xmlEntry.toString(), row.xmlEntry)
 		assertEquals(spec, row.spec)
-		
-		logger.info("Testing Record")
+		logger.info("-------------------------------------------------------------------------")
+		logger.info("Testing Record Insertion...")
+		logger.info("-------------------------------------------------------------------------")
 		logger.info("Testing CurationManager data feed.....People")
 		logger.info("Creating DB table:${config.harvest.sql.record.init}")
 		sql.execute(config.harvest.sql.record.init)
@@ -190,7 +191,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		logger.debug(request)
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Record....")
-		def rows = sql.rows(config.harvest.sql.record.select, [recordId])
+		def rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
 		rows.each {rowEntry->
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
@@ -333,7 +334,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		logger.debug(request)
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Record....")
-		rows = sql.rows(config.harvest.sql.record.select, [recordId])
+		rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
 		rows.each {rowEntry->
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
@@ -347,11 +348,48 @@ class OaiHarvestTest extends GroovyTestCase {
 			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
 			if ("eac-cpf" == rowEntry.metadataPrefix) {
 				def eacCpf = parsedXml.metadata["eac-cpf"]
-				
+				logger.info("Validating EAC CPF ------------")
 			}
 			if ("oai_dc" == rowEntry.metadataPrefix) {
+				logger.info("Validating OAI-DC")
 				def oaiDc = parsedXml.metadata["dc"]
-				assertEquals(jsonMapData.data[0].localPid, oaiDc["identifier"].toString())
+				
+				assertEquals(jsonMapData.data[0].objectMetadata.localPid, oaiDc["identifier"].toString())
+				String name = "${jsonMapData.data[0].metadata.data.Honorific} ${jsonMapData.data[0].metadata.data.Given_Name} ${jsonMapData.data[0].metadata.data.Family_Name}"
+				assertEquals(name, oaiDc["title"].toString())
+				assertEquals("'Parties' entry for '$name'", oaiDc["description"].toString())
+			}
+		}
+		logger.info("-------------------------------------------------------------------------")
+		logger.info("Testing Record Update...")
+		logger.info("-------------------------------------------------------------------------")
+		jsonMapData.data[0].metadata.data.Given_Name = "Given Name"
+		request = new JsonBuilder(jsonMapData).toString()
+		logger.info("Sending Record Update message....")
+		logger.debug(request)
+		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
+		logger.info("Validating Record Update....")
+		rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
+		assertEquals(1, rows.size())
+		rows.each {rowEntry->
+			assertNotNull(rowEntry)
+			assertEquals(recordId, rowEntry.recordId)
+			assertEquals(recordSource, rowEntry.source)
+			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)
+			assertNotNull(rowEntry.xmlEntry)
+			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].recordId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
+			if ("eac-cpf" == rowEntry.metadataPrefix) {
+				def eacCpf = parsedXml.metadata["eac-cpf"]
+				logger.info("Validating EAC CPF ------------")
+			}
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				logger.info("Validating OAI-DC")
+				def oaiDc = parsedXml.metadata["dc"]
+				assertEquals(jsonMapData.data[0].objectMetadata.localPid, oaiDc["identifier"].toString())
 				String name = "${jsonMapData.data[0].metadata.data.Honorific} ${jsonMapData.data[0].metadata.data.Given_Name} ${jsonMapData.data[0].metadata.data.Family_Name}"
 				assertEquals(name, oaiDc["title"].toString())
 				assertEquals("'Parties' entry for '$name'", oaiDc["description"].toString())

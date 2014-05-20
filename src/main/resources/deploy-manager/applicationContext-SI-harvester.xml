@@ -32,12 +32,12 @@ Configuration file for accepting Oai-pmh publish requests.
 	</int:channel>
 	<int:channel id="oaiVelocityChannel">
 		<int:interceptors>
-			<int:wire-tap channel="mainloggingChannel" />
+			<int:wire-tap channel="oaiVelocityLoggingChannel" />
 		</int:interceptors>
 	</int:channel>		
 	<int:channel id="oaiHarvestRoutingChannel" >
 		<int:interceptors>
-			<int:wire-tap channel="mainloggingChannel" />
+			<int:wire-tap channel="oaiHarvestRoutingLoggingChannel" />
 		</int:interceptors>
 	</int:channel>	
 	<int:channel id="oaiInvalidTypeChannel">
@@ -59,15 +59,30 @@ Configuration file for accepting Oai-pmh publish requests.
 	</int:channel>
 	<int:channel id="oaiRecordSplitterChannel">
 		<int:interceptors>
-			<int:wire-tap channel="mainloggingChannel" />
+			<int:wire-tap channel="splitterLoggingChannel" />
 		</int:interceptors>
 	</int:channel>
 	<int:channel id="oaiRecordOutboundChannel">
 		<int:interceptors>
-			<int:wire-tap channel="mainloggingChannel" />
+			<int:wire-tap channel="oaiRecordOutboundLoggingChannel" />
 		</int:interceptors>
 	</int:channel>
 	<int:channel id="oaiRecordInsertChannel">
+		<int:interceptors>
+			<int:wire-tap channel="oaiRecordInsertLoggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiRecordRoutingChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiRecordDoneChannel">
+		<int:interceptors>
+			<int:wire-tap channel="mainloggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="oaiRecordUpdateChannel">
 		<int:interceptors>
 			<int:wire-tap channel="mainloggingChannel" />
 		</int:interceptors>
@@ -102,7 +117,7 @@ Configuration file for accepting Oai-pmh publish requests.
 	<!--  running the Velocity transformers -->
 	<int:transformer input-channel="oaiVelocityChannel" output-channel="oaiHarvestRoutingChannel" ref="velocityTransformer" method="handleMessage" />
 	
-	<!--  route to DB persisitence, depending on type -->
+	<!--  route to DB persistence, depending on type -->
 	<int:header-value-router header-name="type" input-channel="oaiHarvestRoutingChannel" default-output-channel="oaiInvalidTypeChannel">
 			<int:mapping value="metadataFormat" channel="oaiMetadataFormatOutboundChannel" />
 			<int:mapping value="identify" channel="oaiIdentifyOutboundChannel" />
@@ -111,14 +126,36 @@ Configuration file for accepting Oai-pmh publish requests.
 			<int:mapping value="record_person_oai_dc" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="record_people_oai_dc" channel="oaiRecordOutboundChannel" />
 	</int:header-value-router>
+	
+	<int:router input-channel="oaiRecordRoutingChannel" expression="payload.UPDATED" default-output-channel="oaiRecordInsertChannel">
+		<int:mapping value="0" channel="oaiRecordInsertChannel"/>
+	    <int:mapping value="1" channel="oaiRecordDoneChannel"/>
+	</int:router>
+	
+	<int:header-enricher input-channel="oaiRecordOutboundChannel" output-channel="oaiRecordUpdateChannel">
+	   <int:header name="xmlEntry" expression="payload.toString()" />
+	</int:header-enricher>
 										
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiMetadataFormatOutboundChannel" query="${harvest.sql.metadata.insert}" sql-parameter-source-factory="spelSource_metadataFormat"/> 			
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiIdentifyOutboundChannel" query="${harvest.sql.identify.insert}" sql-parameter-source-factory="spelSource_identify"/>
 	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiSetOutboundChannel" query="${harvest.sql.set.insert}" sql-parameter-source-factory="spelSource_set"/>
-	<int-jdbc:outbound-gateway data-source="dataSource" request-channel="oaiRecordOutboundChannel" reply-channel="oaiRecordInsertChannel" update="${harvest.sql.record.delete}" query="${harvest.sql.record.insert}" request-sql-parameter-source-factory="spelSource_record" reply-sql-parameter-source-factory="spelSource_record"/>
+	<int-jdbc:outbound-gateway data-source="dataSource" request-channel="oaiRecordUpdateChannel" reply-channel="oaiRecordRoutingChannel" update="${harvest.sql.record.update}" request-sql-parameter-source-factory="spelSource_record" />
 
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordInsertChannel" query="${harvest.sql.record.insert}" sql-parameter-source-factory="spelSource_recordInsert"/>
+	<int-jdbc:outbound-channel-adapter data-source="dataSource" channel="oaiRecordDoneChannel" query="${harvest.sql.record.nullupdate}"/>
+	
 	<int:logging-channel-adapter id="mainloggingChannel"
 		expression="'Record headers:' + headers" />
+	<int:logging-channel-adapter id="splitterLoggingChannel"
+		expression="'\nSplitting Channel----------------------------------\n Record headers:' + headers" />
+	<int:logging-channel-adapter id="oaiVelocityLoggingChannel"
+		expression="'\nVelocity Channel--------------------------------\n Record headers:' + headers " />
+	<int:logging-channel-adapter id="oaiHarvestRoutingLoggingChannel"
+		expression="'\Harvest Routing Channel--------------------------------\n Record headers:' + headers " />
+	<int:logging-channel-adapter id="oaiRecordOutboundLoggingChannel"
+		expression="'\Record Outbound Channel--------------------------------\n Record headers:' + headers " />
+	<int:logging-channel-adapter id="oaiRecordInsertLoggingChannel"
+		expression="'\Record Processed Completed!!!!--------------------------------\n Record headers:' + headers " />
 	<int:logging-channel-adapter id="errorLoggingChannel"
 		expression="'Failed to process record:' + headers.type" />
 
@@ -187,6 +224,17 @@ Configuration file for accepting Oai-pmh publish requests.
 	            <entry key="source" 		value="headers['json'].source"/>
 	            <entry key="recordId"  		value="headers['json'].recordId"/>
 	            <entry key="xmlEntry"  		value="payload"/>
+	        </map>
+	    </property>
+	</bean>
+	<bean id="spelSource_recordInsert"
+	      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+	    <property name="parameterExpressions">
+	        <map>
+	            <entry key="metadataPrefix" value="headers['metadataPrefix']"/>
+	            <entry key="source" 		value="headers['json'].source"/>
+	            <entry key="recordId"  		value="headers['json'].recordId"/>
+	            <entry key="xmlEntry"  		value="headers['xmlEntry']"/>
 	        </map>
 	    </property>
 	</bean>
