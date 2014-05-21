@@ -4,14 +4,14 @@
      },
      "data":[
         {
-           "recordId":"record-1: a unique DB identifier, could be OID",
+           "recordId":"recordId_Person",
            "metadataPrefix":[
               "eac-cpf",
               "oai_dc"
            ],
-           "source":"Unit-Test: Any arbitrary string that identifies the source of this publish request.",
+           "source":"Unit Test - Any arbitrary string that identifies the source of this publish request.",
            "jsonData":{
-              "recordId":"d082b0890570265c99b52f360a674112",
+              "recordId":"recordId_Person",
               "control":{
                  "maintenanceAgency":{
                     "agencyCode":"AU-QQCIF",

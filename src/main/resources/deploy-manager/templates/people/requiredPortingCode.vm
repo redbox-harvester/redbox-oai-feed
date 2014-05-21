@@ -1,0 +1,9 @@
+## BEGIN PORTING THIS TEMPLATE FOR HARVESTER
+## Lines below inject our data and notify util of this script's format, useful when accessing constants
+#set($util = $data.get('util'))
+#set($systemConfig = $data.get('systemConfig'))
+#set($item = $data)
+#set($object = $data)
+#set($oid = $data.get('recordId'))
+$util.setData($data)
+## END PORTING THIS TEMPLATE FOR HARVESTER

@@ -90,6 +90,12 @@ environments {
 					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
 				}
 			}
+			record_people_eac_cpf {
+				templates = ["people/eac-cpf.vm", "people/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
 		}
 		cloningSplitter {
 			srcArray = "metadataPrefix"

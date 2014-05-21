@@ -125,6 +125,7 @@ Configuration file for accepting Oai-pmh publish requests.
 			<int:mapping value="record_person_eac-cpf" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="record_person_oai_dc" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="record_people_oai_dc" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_people_eac-cpf" channel="oaiRecordOutboundChannel" />
 	</int:header-value-router>
 	
 	<int:router input-channel="oaiRecordRoutingChannel" expression="payload.UPDATED" default-output-channel="oaiRecordInsertChannel">

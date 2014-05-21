@@ -147,10 +147,8 @@ class OaiHarvestTest extends GroovyTestCase {
 		assertNotNull(row)
 		assertEquals(xmlEntry.toString(), row.xmlEntry)
 		assertEquals(spec, row.spec)
-		logger.info("-------------------------------------------------------------------------")
-		logger.info("Testing Record Insertion...")
-		logger.info("-------------------------------------------------------------------------")
-		logger.info("Testing CurationManager data feed.....People")
+		logger.info("Testing Record Person...")
+		logger.info("Testing CurationManager data feed.....Person")
 		logger.info("Creating DB table:${config.harvest.sql.record.init}")
 		sql.execute(config.harvest.sql.record.init)
 		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
@@ -196,7 +194,6 @@ class OaiHarvestTest extends GroovyTestCase {
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
 			assertEquals(recordSource, rowEntry.source)
-	//		assertEquals(metadataPrefix, rowEntry.metadataPrefix)
 			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)
 			assertNotNull(rowEntry.xmlEntry)
 			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
@@ -223,10 +220,11 @@ class OaiHarvestTest extends GroovyTestCase {
 				assertEquals(jsonMapData.data[0].jsonData.description, oaiDc["description"].toString())
 			}
 		}
-		
+		logger.info("-------------------------------------------------------------------------")
 		logger.info("Testing for RB/Mint Data feed......People")
+		logger.info("-------------------------------------------------------------------------")
 		recordId = "Unique ID - People"
-		mdPrefix = ["oai_dc"]
+		mdPrefix = ["oai_dc", "eac-cpf"]
 		jsonMapData = [
 			"header":[ // control header for identifying this record
 				"type":"record_people"
@@ -318,12 +316,26 @@ class OaiHarvestTest extends GroovyTestCase {
 						"objectId":"e6656a2c87d086b015db7e4d9e60c65e",
 						"scriptType":"python",
 						"rulesPid":"Parties_People.py",
-						"localPid":"http://demo.redboxresearchdata.com.au/mint/published/detail/e6656a2c87d086b015db7e4d9e60c65e"
+						"localPid":"http://demo.redboxresearchdata.com.au/mint/published/detail/e6656a2c87d086b015db7e4d9e60c65e",
+						"eac_creation_date":"2014-03-18T06:09:03Z"
 						
 					],
 					"constants": [
 						"oai_dc": [
 							"curation":["pidProperty":"localPid"] // using the local Pid as identifier
+						],
+						"eac-cpf": [
+							"curation":[
+								"pidProperty":"localPid",
+								"nlaIntegration":[
+									"agencyCode":"AgencyCode",
+									"agencyName":"AgencyName"
+								]
+							],
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
 						]
 					]
 				]
@@ -335,11 +347,18 @@ class OaiHarvestTest extends GroovyTestCase {
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Record....")
 		rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
+		boolean hasEac = false
+		boolean hasOai = false
 		rows.each {rowEntry->
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
 			assertEquals(recordSource, rowEntry.source)
-			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)
+			if ("oai_dc" == rowEntry.metadataPrefix)
+				hasOai = true
+			if ("eac-cpf" == rowEntry.metadataPrefix)
+				hasEac = true
+			
+			assertTrue(hasOai || hasEac)
 			assertNotNull(rowEntry.xmlEntry)
 			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
 			// validating header..
@@ -348,7 +367,13 @@ class OaiHarvestTest extends GroovyTestCase {
 			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
 			if ("eac-cpf" == rowEntry.metadataPrefix) {
 				def eacCpf = parsedXml.metadata["eac-cpf"]
-				logger.info("Validating EAC CPF ------------")
+				logger.info("Validating EAC CPF")
+				// validate eac-cpf specific bits
+				
+				assertEquals(jsonMapData.data[0].recordId, eacCpf.control.recordId.toString())
+				assertEquals(jsonMapData.data[0].constants["eac-cpf"].curation.nlaIntegration.agencyCode, eacCpf.control.maintenanceAgency.agencyCode.toString())
+				assertEquals(jsonMapData.data[0].constants["eac-cpf"].curation.nlaIntegration.agencyName, eacCpf.control.maintenanceAgency.agencyName.toString())
+				// TODO: add more fields to check
 			}
 			if ("oai_dc" == rowEntry.metadataPrefix) {
 				logger.info("Validating OAI-DC")
@@ -360,6 +385,7 @@ class OaiHarvestTest extends GroovyTestCase {
 				assertEquals("'Parties' entry for '$name'", oaiDc["description"].toString())
 			}
 		}
+		assertTrue(hasOai && hasEac)
 		logger.info("-------------------------------------------------------------------------")
 		logger.info("Testing Record Update...")
 		logger.info("-------------------------------------------------------------------------")
@@ -370,7 +396,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Record Update....")
 		rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
-		assertEquals(1, rows.size())
+		assertEquals(mdPrefix.size(), rows.size())
 		rows.each {rowEntry->
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
