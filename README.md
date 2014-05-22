@@ -18,9 +18,9 @@ If everything went well, you can view the server's available metadata formats he
 
     http://localhost/oai-server/?verb=ListMetadataFormats     
 
-You can also optionally <a href='https://github.com/redbox-harvester/redbox-oai-feed/blob/master/support/install/addSampleEacRecord.groovy'>insert sample data</a>. You may run the ff. command on the same directory used on the previous commands:
+You can also optionally <a href='https://github.com/redbox-harvester/redbox-oai-feed/blob/master/support/install/'>insert sample data</a>. You may run the ff. command on the same directory used on the previous commands:
     
-    groovy addSampleEacRecord.groovy
+    groovy addSampleRecord.groovy
  
 When running the command, you may have to wait for a few minutes as it downloads its dependencies. A couple of minutes or so after it finishes, you can then view the sample record at:
     

@@ -113,6 +113,7 @@ Configuration file for accepting Oai-pmh publish requests.
 		<int:mapping value="record_people" channel="oaiRecordSplitterChannel" />
 		<int:mapping value="record_group" channel="oaiRecordSplitterChannel" />
 		<int:mapping value="record_service" channel="oaiRecordSplitterChannel" />
+		<int:mapping value="record_dataset" channel="oaiRecordSplitterChannel" />
 	</int:header-value-router>
 	<int:splitter ref="cloningSplitter" method="cloneByArray" input-channel="oaiRecordSplitterChannel" output-channel="oaiVelocityChannel"/>
 	
@@ -132,6 +133,8 @@ Configuration file for accepting Oai-pmh publish requests.
 			<int:mapping value="record_group_oai_dc" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="record_group_rif" channel="oaiRecordOutboundChannel" />
 			<int:mapping value="record_service_rif" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_dataset_oai_dc" channel="oaiRecordOutboundChannel" />
+			<int:mapping value="record_dataset_rif" channel="oaiRecordOutboundChannel" />
 	</int:header-value-router>
 	
 	<int:router input-channel="oaiRecordRoutingChannel" expression="payload.UPDATED" default-output-channel="oaiRecordInsertChannel">

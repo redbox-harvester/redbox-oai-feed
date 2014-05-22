@@ -1,0 +1,161 @@
+## BEGIN PORTING THIS TEMPLATE FOR HARVESTER
+#parse("requiredPortingCode.vm")
+$util.setFormat("oai_dc")
+## END PORTING THIS TEMPLATE FOR HARVESTER
+#macro(dc1 $tag)
+    #set ($value = $util.get($item, "dc:${tag}"))
+    #if ("$!value" != "")
+<dc:${tag}>$util.encodeXml($value)</dc:${tag}>
+    #end
+#end
+#macro(dc2 $tag $field)
+    #set ($value = $util.get($item, $field))
+    #if ("$!value" != "")
+<dc:${tag}>$util.encodeXml($value)</dc:${tag}>
+    #end
+#end
+#macro(dc3 $data $tag $field)
+    #set ($value = $data.get($field))
+    #if ("$!value" != "")
+<dc:${tag}>$util.encodeXml($value)</dc:${tag}>
+    #end
+#end
+#macro(dcData $tag $data)
+<dc:${tag}>$util.encodeXml($data)</dc:${tag}>
+#end
+#macro(relations $baseKey)
+    #set($valueMap = $util.getList($item, $baseKey))
+    #foreach($key in $valueMap.keySet())
+        #set($value = $valueMap.get($key).get("dc:identifier"))
+        #if ("$!value" != "")
+        <dc:relation>$util.encodeXml($value)</dc:relation>
+        #end
+    #end
+#end
+#macro(dcList $tag $baseKey $label)
+    #set($valueMap = $util.getList($item, $baseKey))
+    #foreach($key in $valueMap.keySet())
+        #set($values = $valueMap.get($key))
+        #if("$!label" == "")
+            #set($value = $values.get($key))
+        #else
+            #set($value = $values.get($label))
+        #end
+        <dc:${tag}>$util.encodeXml($value)</dc:${tag}>
+    #end
+#end
+#macro(dcAnzsrc $tag $baseKey $data $label)
+    #set($valueMap = $util.getList($item, $baseKey))
+    #foreach($key in $valueMap.keySet())
+        #set($values = $valueMap.get($key))
+        #if("$!label" != "")
+            #set($value = $values.get($label))
+        #else
+            #set($value = $values.get($data))
+        #end
+        #set($lastIndex = $value.lastIndexOf('-') + 1 )
+        #set($text = $value.substring($lastIndex).trim() )
+        <dc:${tag}>$util.encodeXml($text)</dc:${tag}>
+    #end
+#end
+
+<oai_dc:dc
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+
+### Resolve the identifier
+#set ($formId = $util.get($item, 'dc:identifier.rdf:PlainLiteral'))
+#set ($formOrigin = $util.get($item, 'dc:identifier.redbox:origin'))
+
+#set($pidProperty = $systemConfig.getString($defaultOnError, "curation", "pidProperty"))
+#set ($pid = $util.getMetadata($object, $pidProperty))
+#if ("$!pid" == "")
+    #set ($pid = $util.get($item, "metadata", "rdf:resource"))
+    #if ("$!pid" == "")
+        #set ($pid = $util.get($item, "metadata", "dc.identifier"))
+    #end
+#end
+
+#set ($identifier = "")
+#if ($formOrigin == "internal")
+    #if ($pid != "")
+        #set ($identifier = $pid)
+    #else
+        #set ($identifier = "$urlBase/detail/$oid")
+    #end
+#else
+    #set ($identifier = $formId)
+#end
+
+<dc:identifier>$util.encodeXml($identifier)</dc:identifier>
+#dc1("title")
+## Type
+#set ($type = $util.get($item, "dc:type.rdf:PlainLiteral"))
+#if ("$!type" != "")
+    <dc:type>$util.encodeXml($type)</dc:type>
+#end
+### Date
+#set ($dateFull = $util.get($item, "dc:created"))
+#if ("$!dateFull" != "")
+    #set($index = $dateFull.indexOf('-'))
+    #set($date = $dateFull.substring(0, $index))
+<dc:date>$util.encodeXml($date)</dc:date>
+#end
+
+### Language
+#set ($langUri = $util.get($item, "dc:language.dc:identifier"))
+#if ("$!langUri" != "")
+    #set($lastIndex = $langUri.lastIndexOf('/') + 1)
+    #set($lang = $langUri.substring($lastIndex))
+<dc:language>$util.encodeXml($lang)</dc:language>
+#end
+
+#dc2("subject", "dc:coverage.redbox:timePeriod")
+
+## Description tab
+#dc1("description")
+#relations("dc:relation.swrc:Publication")
+#relations("dc:relation.bibo:Website")
+
+## People
+#set($valueMap = $util.getList($item, "dc:creator.foaf:Person"))
+#foreach($key in $valueMap.keySet())
+    #set($value = $valueMap.get($key).get("foaf:name"))
+    #if ("$!value" != "")
+    <dc:creator>$util.encodeXml($value)</dc:creator>
+    #else
+        #set($value = $valueMap.get($key).get("foaf:givenName"))
+        #if ("$!value" != "")
+            #set($surname = $valueMap.get($key).get("foaf:familyName"))
+            #if ("$!surname" != "")
+            <dc:creator>$util.encodeXml($surname), $util.encodeXml($value)</dc:creator>
+            #else
+            <dc:creator>$util.encodeXml($value)</dc:creator>
+            #end
+        #end
+    #end
+#end
+
+#dcAnzsrc("subject" "dc:subject.anzsrc:for" "rdf:resource" "skos:prefLabel")
+#dcAnzsrc("subject" "dc:subject.anzsrc:seo" "rdf:resource" "skos:prefLabel")
+#dcList("subject" "dc:subject.vivo:keyword" "rdf:PlainLiteral")
+
+#dc2("rights", "dc:accessRights.rdf:PlainLiteral")
+#dc2("rights", "dc:accessRights.dc:RightsStatement")
+#dc2("rights", "redbox:creativeCommonsLicense.dc:identifier")
+#dc2("rights", "dc:license.dc:identifier")
+
+
+## Management
+#set($defaultOnError = "&Invalid XML placeholder... prevents ANDS Harvesting records in error&")
+#set ($institution = $systemConfig.getString($defaultOnError, "redbox.identity", "RIF-CS Group"))
+#set ($affiliation = $util.get($item, "foaf:Organization.skos:prefLabel"))
+#if ("$!affiliation" != "")
+    #set ($contributor = "${institution}. ${affiliation}")
+#else
+    #set ($contributor = "${institution}.")
+#end
+<dc:contributor>$util.encodeXml($contributor)</dc:contributor>
+</oai_dc:dc>

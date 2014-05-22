@@ -49,6 +49,44 @@ class LegacyUtil {
 	public String getMetadata(JsonSimpleWrapper object, String property) {
 		object.getString("", property)
 	}
+	/**
+	 * Replaces $util.getList
+	 * 
+	 */
+	public Map<String, Object> getList(JsonSimpleWrapper object, String property) {
+		def retVal = [:]
+		property = property.endsWith(".") ? property : property + "."
+		object.data.each{ key,value->
+			if (key.startsWith(property)) {
+				def data = null
+				String field = property
+
+                if (key.length() >= property.length()) {
+                    field = key.substring(property.length(), key.length())
+                }
+
+                String index = field;
+                if (field.indexOf(".") > 0) {
+                    index = field.substring(0, field.indexOf("."))
+                }
+				if (retVal.containsKey(index)) {
+					data = retVal[index]
+				} else {
+					data = [:]
+					retVal.put(index, data)
+				}
+
+				if (value.length() == 1) {
+					value = String.valueOf(value.charAt(0))
+				}
+
+				data.put(
+						field.substring(field.indexOf(".") + 1, field.length()),
+						value);
+			}
+		}
+		return retVal
+	}
 	
 	public JsonSimpleWrapper getItem() {
 		return new JsonSimpleWrapper(data.metadata)

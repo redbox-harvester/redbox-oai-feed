@@ -1,5 +1,5 @@
 ## BEGIN PORTING THIS TEMPLATE FOR HARVESTER
-#parse("people/requiredPortingCode.vm")
+#parse("requiredPortingCode.vm")
 $util.setFormat("rif")
 #set($urlBase = $systemConfig.getString("http://127.0.0.1:9001/mint", "urlBase"))
 ## END PORTING THIS TEMPLATE FOR HARVESTER

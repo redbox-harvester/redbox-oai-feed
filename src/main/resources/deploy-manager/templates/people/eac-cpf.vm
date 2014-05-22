@@ -1,5 +1,5 @@
 ## BEGIN PORTING THIS TEMPLATE FOR HARVESTER
-#parse("people/requiredPortingCode.vm")
+#parse("requiredPortingCode.vm")
 $util.setFormat("eac-cpf")
 ## END PORTING THIS TEMPLATE FOR HARVESTER
 #set($defaultOnError = "&Invalid XML placeholder... prevents Harvesting records in error&")

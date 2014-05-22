@@ -1,5 +1,5 @@
 ## BEGIN PORTING THIS TEMPLATE FOR HARVESTER
-#parse("people/requiredPortingCode.vm")
+#parse("requiredPortingCode.vm")
 $util.setFormat("oai_dc")
 ## END PORTING THIS TEMPLATE FOR HARVESTER
 #set($defaultOnError = "&Invalid XML placeholder... prevents ANDS Harvesting records in error&")

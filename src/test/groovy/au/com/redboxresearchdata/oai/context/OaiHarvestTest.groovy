@@ -82,6 +82,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		doRecordPeople()
 		doRecordGroup()
 		doRecordService()
+		doRecordDataset()
 	}
 	// ------ The Tests -------------
 	// ---------------------------------------------------------------------------------------------------
@@ -726,22 +727,6 @@ class OaiHarvestTest extends GroovyTestCase {
 						
 					],
 					"constants": [
-						"oai_dc": [
-							"curation":["pidProperty":"localPid"] // using the local Pid as identifier
-						],
-						"eac-cpf": [
-							"curation":[
-								"pidProperty":"localPid",
-								"nlaIntegration":[
-									"agencyCode":"AgencyCode",
-									"agencyName":"AgencyName"
-								]
-							],
-							"redbox.identity": [
-								"institution": "University of Examples",
-								"RIF-CS Group": "The University of Examples, Australia"
-							]
-						],
 						"rif": [
 							"urlBase":"http://localhost:9001/mint/",
 							"curation":["pidProperty":"localPid"],
@@ -788,5 +773,425 @@ class OaiHarvestTest extends GroovyTestCase {
 			}
 		}
 		assertTrue(hasRif)
+	}
+	
+	// ---------------------------------------------------------------------------------------------------
+	void doRecordDataset() {
+		logger.info("-------------------------------------------------------------------------")
+		logger.info("Testing for RB/Mint Data feed......Dataset")
+		logger.info("-------------------------------------------------------------------------")
+		def recordId = "87ac73066be4fdbb1f1db8ac8968b5fe"
+		def mdPrefix = [ "oai_dc", "rif"]
+		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
+		def jsonMapData = [
+			"header":[ // control header for identifying this record
+				"type":"record_dataset"
+			],
+			"data":[ // the actual payload
+				[ // first entry of the payload
+					"recordId":recordId,
+					"dateStamp":"2014-03-18T06:09:03Z",
+					"metadataPrefix":mdPrefix,
+					"source":recordSource,
+					"metadata": [ // the actual data from RB/Mint/CM
+						"title": "Testing",
+					    "viewId": "default",
+					    "packageType": "dataset",
+					    "description": "This is for Testing ",
+					    "redbox:newForm": "false",
+					    "redbox:formVersion": "1.6.1",
+					    "create_timestamp": "2013-11-21T01:48:04Z",
+					    "dc:title": "Testing",
+					    "dc:type.rdf:PlainLiteral": "dataset",
+					    "dc:type.skos:prefLabel": "Dataset",
+					    "dc:created": "2013-11-21",
+					    "dc:modified": "",
+					    "dc:language.dc:identifier": "http://id.loc.gov/vocabulary/iso639-2/eng",
+					    "dc:language.skos:prefLabel": "English",
+					    "dc:coverage.vivo:DateTimeInterval.vivo:start": "",
+					    "dc:coverage.vivo:DateTimeInterval.vivo:end": "",
+					    "dc:coverage.redbox:timePeriod": "",
+					    "dc:coverage.vivo:GeographicLocation.1.dc:type": "",
+					    "dc:coverage.vivo:GeographicLocation.1.redbox:wktRaw": "",
+					    "dc:coverage.vivo:GeographicLocation.1.rdf:PlainLiteral": "",
+					    "dc:coverage.vivo:GeographicLocation.1.geo:long": "",
+					    "dc:coverage.vivo:GeographicLocation.1.geo:lat": "",
+					    "dc:coverage.vivo:GeographicLocation.1.dc:identifier": "",
+					    "dc:description": "This is for Testing ",
+					    "dc:relation.swrc:Publication.1.dc:identifier": "",
+					    "dc:relation.swrc:Publication.1.dc:title": "",
+					    "dc:relation.swrc:Publication.1.skos:note": "",
+					    "dc:relation.bibo:Website.1.dc:identifier": "",
+					    "dc:relation.bibo:Website.1.dc:title": "",
+					    "dc:relation.bibo:Website.1.skos:note": "",
+					    "dc:relation.vivo:Dataset.1.dc:identifier": "",
+					    "dc:relation.vivo:Dataset.1.vivo:Relationship.rdf:PlainLiteral": "hasAssociationWith",
+					    "dc:relation.vivo:Dataset.1.vivo:Relationship.skos:prefLabel": "Has association with:",
+					    "dc:relation.vivo:Dataset.1.dc:title": "",
+					    "dc:relation.vivo:Dataset.1.skos:note": "",
+					    "dc:relation.vivo:Dataset.1.redbox:origin": "on",
+					    "dc:relation.vivo:Dataset.1.redbox:publish": "",
+					    "dc:relation.vivo:Service.1.dc:identifier": "",
+					    "dc:relation.vivo:Service.1.vivo:Relationship.rdf:PlainLiteral": "hasAssociationWith",
+					    "dc:relation.vivo:Service.1.vivo:Relationship.skos:prefLabel": "Has association with:",
+					    "dc:relation.vivo:Service.1.dc:title": "",
+					    "dc:relation.vivo:Service.1.skos:note": "",
+					    "dc:creator.foaf:Person.1.dc:identifier": "redbox-mint.googlecode.com/parties/people/1243",
+					    "dc:creator.foaf:Person.1.foaf:name": ", Drew",
+					    "dc:creator.foaf:Person.1.foaf:title": "M",
+					    "dc:creator.foaf:Person.1.redbox:isCoPrimaryInvestigator": "",
+					    "dc:creator.foaf:Person.1.redbox:isPrimaryInvestigator": "",
+					    "dc:creator.foaf:Person.1.foaf:givenName": "Drew",
+					    "dc:creator.foaf:Person.1.foaf:familyName": "",
+					    "dc:creator.foaf:Person.1.foaf:Organization.dc:identifier": "redbox-mint.googlecode.com/parties/group/15",
+					    "dc:creator.foaf:Person.1.foaf:Organization.skos:prefLabel": "Institute for Examples",
+					    "locrel:prc.foaf:Person.dc:identifier": "",
+					    "locrel:prc.foaf:Person.foaf:name": "",
+					    "locrel:prc.foaf:Person.foaf:title": "",
+					    "locrel:prc.foaf:Person.foaf:givenName": "",
+					    "locrel:prc.foaf:Person.foaf:familyName": "",
+					    "locrel:prc.foaf:Person.foaf:email": "",
+					    "swrc:supervisor.foaf:Person.1.dc:identifier": "",
+					    "swrc:supervisor.foaf:Person.1.foaf:name": "",
+					    "swrc:supervisor.foaf:Person.1.foaf:title": "",
+					    "swrc:supervisor.foaf:Person.1.foaf:givenName": "",
+					    "swrc:supervisor.foaf:Person.1.foaf:familyName": "",
+					    "dc:contributor.locrel:clb.1.foaf:Agent": "",
+					    "dc:subject.vivo:keyword.1.rdf:PlainLiteral": "Testing",
+					    "dc:subject.anzsrc:toa.rdf:resource": "",
+					    "dc:subject.anzsrc:toa.skos:prefLabel": "",
+					    "dc:accessRights.skos:prefLabel": "Contact for Testing",
+					    "dc:accessRights.dc:identifier": "",
+					    "dc:accessRights.dc:RightsStatement.skos:prefLabel": "Test for Rights",
+					    "dc:accessRights.dc:RightsStatement.dc:identifier": "",
+					    "dc:license.skos:prefLabel": "",
+					    "dc:license.dc:identifier": "",
+					    "dc:license.rdf:Alt.skos:prefLabel": "",
+					    "dc:license.rdf:Alt.dc:identifier": "",
+					    "dc:identifier.rdf:PlainLiteral": "",
+					    "dc:identifier.dc:type.rdf:PlainLiteral": "handle",
+					    "dc:identifier.dc:type.skos:prefLabel": "HANDLE System Identifier",
+					    "dc:identifier.redbox:origin": "internal",
+					    "bibo:Website.1.dc:identifier": "http://demo.redboxresearchdata.com.au/redbox",
+					    "vivo:Location.vivo:GeographicLocation.gn:name": "",
+					    "vivo:Location.vivo:GeographicLocation.skos:note": "",
+					    "redbox:retentionPeriod": "12",
+					    "dc:extent": "12",
+					    "redbox:disposalDate": "",
+					    "locrel:own.foaf:Agent.1.foaf:name": "",
+					    "locrel:dtm.foaf:Agent.foaf:name": "",
+					    "foaf:Organization.dc:identifier": "",
+					    "foaf:Organization.skos:prefLabel": "",
+					    "foaf:fundedBy.foaf:Agent.1.skos:prefLabel": "",
+					    "foaf:fundedBy.foaf:Agent.1.dc:identifier": "",
+					    "foaf:fundedBy.vivo:Grant.1.redbox:internalGrant": "",
+					    "foaf:fundedBy.vivo:Grant.1.redbox:grantNumber": "",
+					    "foaf:fundedBy.vivo:Grant.1.dc:identifier": "",
+					    "foaf:fundedBy.vivo:Grant.1.skos:prefLabel": "",
+					    "swrc:ResearchProject.dc:title": "",
+					    "locrel:dpt.foaf:Person.foaf:name": "",
+					    "dc:SizeOrDuration": "",
+					    "dc:Policy": "",
+					    "redbox:ManagementPlan.redbox:hasPlan": null,
+					    "redbox:ManagementPlan.skos:note": "",
+					    "skos:note.1.dc:created": "",
+					    "skos:note.1.foaf:name": "",
+					    "skos:note.1.dc:description": "",
+					    "dc:biblioGraphicCitation.skos:prefLabel": "",
+					    "dc:biblioGraphicCitation.redbox:sendCitation": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:identifier.skos:note": "useCuration",
+					    "dc:biblioGraphicCitation.dc:hasPart.locrel:ctb.1.foaf:title": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.locrel:ctb.1.foaf:givenName": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.locrel:ctb.1.foaf:familyName": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:title": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:hasVersion.rdf:PlainLiteral": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:publisher.rdf:PlainLiteral": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.vivo:Publisher.vivo:Location": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:date.1.rdf:PlainLiteral": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:date.2.rdf:PlainLiteral": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:date.1.dc:type.rdf:PlainLiteral": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:date.2.dc:type.rdf:PlainLiteral": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:date.1.dc:type.skos:prefLabel": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.dc:date.2.dc:type.skos:prefLabel": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.bibo:Website.dc:identifier": "",
+					    "dc:biblioGraphicCitation.dc:hasPart.skos:scopeNote": "",
+					    "redbox:submissionProcess.redbox:submitted": "null",
+					    "redbox:submissionProcess.dc:date": "",
+					    "redbox:submissionProcess.dc:description": "",
+					    "redbox:submissionProcess.locrel:prc.foaf:Person.foaf:name": "",
+					    "redbox:submissionProcess.locrel:prc.foaf:Person.foaf:phone": "",
+					    "redbox:submissionProcess.locrel:prc.foaf:Person.foaf:mbox": "",
+					    "redbox:submissionProcess.dc:title": "",
+					    "redbox:submissionProcess.skos:note": "",
+					    "redbox:embargo.redbox:isEmbargoed": "",
+					    "redbox:embargo.dc:date": "",
+					    "redbox:embargo.skos:note": "",
+					    "dc:relation.redbox:TechnicalMetadata.1.dc:identifier": "",
+					    "dc:relation.redbox:TechnicalMetadata.1.dc:title": "",
+					    "dc:relation.redbox:TechnicalMetadata.1.dc:type": "",
+					    "dc:relation.redbox:TechnicalMetadata.1.dc:conformsTo": "",
+					    "xmlns:dc": "http://dublincore.org/documents/2008/01/14/dcmi-terms/",
+					    "xmlns:foaf": "http://xmlns.com/foaf/spec/",
+					    "xmlns:anzsrc": "http://purl.org/anzsrc/",
+					    "metaList": [
+					        "dc:title",
+					        "dc:type.rdf:PlainLiteral",
+					        "dc:type.skos:prefLabel",
+					        "dc:created",
+					        "dc:modified",
+					        "dc:language.dc:identifier",
+					        "dc:language.skos:prefLabel",
+					        "redbox:formVersion",
+					        "redbox:newForm",
+					        "dc:coverage.vivo:DateTimeInterval.vivo:start",
+					        "dc:coverage.vivo:DateTimeInterval.vivo:end",
+					        "dc:coverage.redbox:timePeriod",
+					        "dc:coverage.vivo:GeographicLocation.1.dc:type",
+					        "dc:coverage.vivo:GeographicLocation.1.redbox:wktRaw",
+					        "dc:coverage.vivo:GeographicLocation.1.rdf:PlainLiteral",
+					        "dc:coverage.vivo:GeographicLocation.1.geo:long",
+					        "dc:coverage.vivo:GeographicLocation.1.geo:lat",
+					        "dc:coverage.vivo:GeographicLocation.1.dc:identifier",
+					        "dc:description",
+					        "dc:relation.swrc:Publication.1.dc:identifier",
+					        "dc:relation.swrc:Publication.1.dc:title",
+					        "dc:relation.swrc:Publication.1.skos:note",
+					        "dc:relation.bibo:Website.1.dc:identifier",
+					        "dc:relation.bibo:Website.1.dc:title",
+					        "dc:relation.bibo:Website.1.skos:note",
+					        "dc:relation.vivo:Dataset.1.dc:identifier",
+					        "dc:relation.vivo:Dataset.1.vivo:Relationship.rdf:PlainLiteral",
+					        "dc:relation.vivo:Dataset.1.vivo:Relationship.skos:prefLabel",
+					        "dc:relation.vivo:Dataset.1.dc:title",
+					        "dc:relation.vivo:Dataset.1.skos:note",
+					        "dc:relation.vivo:Dataset.1.redbox:origin",
+					        "dc:relation.vivo:Dataset.1.redbox:publish",
+					        "dc:relation.vivo:Service.1.dc:identifier",
+					        "dc:relation.vivo:Service.1.vivo:Relationship.rdf:PlainLiteral",
+					        "dc:relation.vivo:Service.1.vivo:Relationship.skos:prefLabel",
+					        "dc:relation.vivo:Service.1.dc:title",
+					        "dc:relation.vivo:Service.1.skos:note",
+					        "dc:creator.foaf:Person.1.dc:identifier",
+					        "dc:creator.foaf:Person.2.dc:identifier",
+					        "dc:creator.foaf:Person.1.foaf:name",
+					        "dc:creator.foaf:Person.2.foaf:name",
+					        "dc:creator.foaf:Person.1.foaf:title",
+					        "dc:creator.foaf:Person.2.foaf:title",
+					        "dc:creator.foaf:Person.1.redbox:isCoPrimaryInvestigator",
+					        "dc:creator.foaf:Person.2.redbox:isCoPrimaryInvestigator",
+					        "dc:creator.foaf:Person.1.redbox:isPrimaryInvestigator",
+					        "dc:creator.foaf:Person.2.redbox:isPrimaryInvestigator",
+					        "dc:creator.foaf:Person.1.foaf:givenName",
+					        "dc:creator.foaf:Person.2.foaf:givenName",
+					        "dc:creator.foaf:Person.1.foaf:familyName",
+					        "dc:creator.foaf:Person.2.foaf:familyName",
+					        "dc:creator.foaf:Person.1.foaf:Organization.dc:identifier",
+					        "dc:creator.foaf:Person.2.foaf:Organization.dc:identifier",
+					        "dc:creator.foaf:Person.1.foaf:Organization.skos:prefLabel",
+					        "dc:creator.foaf:Person.2.foaf:Organization.skos:prefLabel",
+					        "locrel:prc.foaf:Person.dc:identifier",
+					        "locrel:prc.foaf:Person.foaf:name",
+					        "locrel:prc.foaf:Person.foaf:title",
+					        "locrel:prc.foaf:Person.foaf:givenName",
+					        "locrel:prc.foaf:Person.foaf:familyName",
+					        "locrel:prc.foaf:Person.foaf:email",
+					        "swrc:supervisor.foaf:Person.1.dc:identifier",
+					        "swrc:supervisor.foaf:Person.1.foaf:name",
+					        "swrc:supervisor.foaf:Person.1.foaf:title",
+					        "swrc:supervisor.foaf:Person.1.foaf:givenName",
+					        "swrc:supervisor.foaf:Person.1.foaf:familyName",
+					        "dc:contributor.locrel:clb.1.foaf:Agent",
+					        "dc:subject.vivo:keyword.1.rdf:PlainLiteral",
+					        "dc:subject.anzsrc:toa.rdf:resource",
+					        "dc:subject.anzsrc:toa.skos:prefLabel",
+					        "dc:accessRights.skos:prefLabel",
+					        "dc:accessRights.dc:identifier",
+					        "dc:accessRights.dc:RightsStatement.skos:prefLabel",
+					        "dc:accessRights.dc:RightsStatement.dc:identifier",
+					        "dc:license.skos:prefLabel",
+					        "dc:license.dc:identifier",
+					        "dc:license.rdf:Alt.skos:prefLabel",
+					        "dc:license.rdf:Alt.dc:identifier",
+					        "dc:identifier.rdf:PlainLiteral",
+					        "dc:identifier.dc:type.rdf:PlainLiteral",
+					        "dc:identifier.dc:type.skos:prefLabel",
+					        "dc:identifier.redbox:origin",
+					        "bibo:Website.1.dc:identifier",
+					        "vivo:Location.vivo:GeographicLocation.gn:name",
+					        "vivo:Location.vivo:GeographicLocation.skos:note",
+					        "redbox:retentionPeriod",
+					        "dc:extent",
+					        "redbox:disposalDate",
+					        "locrel:own.foaf:Agent.1.foaf:name",
+					        "locrel:dtm.foaf:Agent.foaf:name",
+					        "foaf:Organization.dc:identifier",
+					        "foaf:Organization.skos:prefLabel",
+					        "foaf:fundedBy.foaf:Agent.1.skos:prefLabel",
+					        "foaf:fundedBy.foaf:Agent.1.dc:identifier",
+					        "foaf:fundedBy.vivo:Grant.1.redbox:internalGrant",
+					        "foaf:fundedBy.vivo:Grant.1.redbox:grantNumber",
+					        "foaf:fundedBy.vivo:Grant.1.dc:identifier",
+					        "foaf:fundedBy.vivo:Grant.1.skos:prefLabel",
+					        "swrc:ResearchProject.dc:title",
+					        "locrel:dpt.foaf:Person.foaf:name",
+					        "dc:SizeOrDuration",
+					        "dc:Policy",
+					        "redbox:ManagementPlan.redbox:hasPlan",
+					        "redbox:ManagementPlan.skos:note",
+					        "skos:note.1.dc:created",
+					        "skos:note.1.foaf:name",
+					        "skos:note.1.dc:description",
+					        "dc:biblioGraphicCitation.skos:prefLabel",
+					        "dc:biblioGraphicCitation.redbox:sendCitation",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:identifier.skos:note",
+					        "dc:biblioGraphicCitation.dc:hasPart.locrel:ctb.1.foaf:title",
+					        "dc:biblioGraphicCitation.dc:hasPart.locrel:ctb.1.foaf:givenName",
+					        "dc:biblioGraphicCitation.dc:hasPart.locrel:ctb.1.foaf:familyName",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:title",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:hasVersion.rdf:PlainLiteral",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:publisher.rdf:PlainLiteral",
+					        "dc:biblioGraphicCitation.dc:hasPart.vivo:Publisher.vivo:Location",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:date.1.rdf:PlainLiteral",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:date.2.rdf:PlainLiteral",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:date.1.dc:type.rdf:PlainLiteral",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:date.2.dc:type.rdf:PlainLiteral",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:date.1.dc:type.skos:prefLabel",
+					        "dc:biblioGraphicCitation.dc:hasPart.dc:date.2.dc:type.skos:prefLabel",
+					        "dc:biblioGraphicCitation.dc:hasPart.bibo:Website.dc:identifier",
+					        "dc:biblioGraphicCitation.dc:hasPart.skos:scopeNote",
+					        "redbox:submissionProcess.redbox:submitted",
+					        "redbox:submissionProcess.dc:date",
+					        "redbox:submissionProcess.dc:description",
+					        "redbox:submissionProcess.locrel:prc.foaf:Person.foaf:name",
+					        "redbox:submissionProcess.locrel:prc.foaf:Person.foaf:phone",
+					        "redbox:submissionProcess.locrel:prc.foaf:Person.foaf:mbox",
+					        "redbox:submissionProcess.dc:title",
+					        "redbox:submissionProcess.skos:note",
+					        "redbox:embargo.redbox:isEmbargoed",
+					        "redbox:embargo.dc:date",
+					        "redbox:embargo.skos:note",
+					        "dc:relation.redbox:TechnicalMetadata.1.dc:identifier",
+					        "dc:relation.redbox:TechnicalMetadata.1.dc:title",
+					        "dc:relation.redbox:TechnicalMetadata.1.dc:type",
+					        "dc:relation.redbox:TechnicalMetadata.1.dc:conformsTo",
+					        "xmlns:dc",
+					        "xmlns:foaf",
+					        "xmlns:anzsrc"
+					    ],
+					    "relationships": [
+					        [
+					            "field": "dc:creator.foaf:Person.0.dc:identifier",
+					            "authority": true,
+					            "identifier": "redbox-mint.googlecode.com/parties/people/1243",
+					            "relationship": "hasCollector",
+					            "reverseRelationship": "isCollectorOf",
+					            "broker": "tcp://localhost:9201",
+					            "isCurated": true,
+					            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/8ab2ffc6a1ee3141f1337e3fb0b7ce2d"
+					        ],
+					        [
+					            "field": "dc:creator.foaf:Person.0.dc:identifier",
+					            "authority": true,
+					            "identifier": "redbox-mint.googlecode.com/parties/people/1241",
+					            "relationship": "hasCollector",
+					            "reverseRelationship": "isCollectorOf",
+					            "broker": "tcp://localhost:9201",
+					            "isCurated": true,
+					            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/49b15b4771c730fa844ec082b020a3c3"
+					        ]
+					    ],
+					    "dc:creator.foaf:Person.2.dc:identifier": "redbox-mint.googlecode.com/parties/people/1241",
+					    "dc:creator.foaf:Person.2.foaf:name": "James, Paul",
+					    "dc:creator.foaf:Person.2.foaf:title": "Dr",
+					    "dc:creator.foaf:Person.2.redbox:isCoPrimaryInvestigator": "",
+					    "dc:creator.foaf:Person.2.redbox:isPrimaryInvestigator": "",
+					    "dc:creator.foaf:Person.2.foaf:givenName": "Paul",
+					    "dc:creator.foaf:Person.2.foaf:familyName": "James",
+					    "dc:creator.foaf:Person.2.foaf:Organization.dc:identifier": "redbox-mint.googlecode.com/parties/group/19",
+					    "dc:creator.foaf:Person.2.foaf:Organization.skos:prefLabel": "Advanced steam engine labs"
+					],
+					"objectMetadata":[
+						"render-pending":false,
+						"owner":"admin",
+						"repository.type":"Metadata Registry",
+						"metaPid": "TF-OBJ-META",
+						"jsonConfigOid":"bb032b6dbe86ac2b4a80f92f27114e83",
+						"ready_to_publish":"ready",
+						"jsonConfigPid":"dataset.json",
+						"repository.name":"ReDBox",
+						"published":true,
+						"rulesOid":"c2ddd5dad6a62627fe9ced1d2cc675d4",
+						"objectId":"87ac73066be4fdbb1f1db8ac8968b5fe",
+						"file.path":"/opt/redbox/home/packages/ef64668c-3c91-42c2-b0ae-a717e02f646e.tfpackage",
+						"scriptType":"python",
+						"rulesPid":"dataset-rules.py",
+						"localPid":"http://demo.redboxresearchdata.com.au/redbox/published/detail/87ac73066be4fdbb1f1db8ac8968b5fe"						
+					],
+					"constants": [
+						"oai_dc": [
+							"curation":["pidProperty":"localPid"], // using the local Pid as identifier
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
+						],
+						"rif": [
+							"urlBase":"http://localhost:9001/mint/",
+							"curation":["pidProperty":"localPid"],
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
+						]
+					]
+				]
+			]
+		]
+		def request = new JsonBuilder(jsonMapData).toString()
+		logger.info("Sending Record message....")
+		logger.debug(request)
+		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
+		logger.info("Validating Record....")
+		def rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
+		boolean hasRif = false
+		boolean hasOai = false
+		rows.each {rowEntry->
+			assertNotNull(rowEntry)
+			assertEquals(recordId, rowEntry.recordId)
+			assertEquals(recordSource, rowEntry.source)
+			if ("rif" == rowEntry.metadataPrefix)
+				hasRif = true
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				hasOai = true
+			}
+				
+			assertTrue(hasRif || hasOai)
+			assertNotNull(rowEntry.xmlEntry)
+			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].recordId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Dataset", parsedXml.header.setSpec.toString())
+			if ("rif" == rowEntry.metadataPrefix) {
+				logger.info("Validating RIF")
+				def rif = parsedXml.metadata["registryObjects"]
+				
+//				def primaryName = rif.registryObject.collection.name.findAll{it.@type == "dataset"}
+//				assertEquals(1, primaryName.size())
+//				
+//				assertEquals(jsonMapData.data[0].metadata.title, primaryName[0].namePart.toString())
+				
+				// TODO: add more fields to check
+			}
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				logger.info("Validating OAI-DC")
+				def oaiDc = parsedXml.metadata["dc"]
+				
+				assertEquals(jsonMapData.data[0].objectMetadata.localPid, oaiDc["identifier"].toString())
+				assertEquals(jsonMapData.data[0].metadata["dc:title"], oaiDc["title"].toString())
+				
+			}
+		}
+		assertTrue(hasRif && hasOai)
 	}
 }
