@@ -224,7 +224,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		logger.info("Testing for RB/Mint Data feed......People")
 		logger.info("-------------------------------------------------------------------------")
 		recordId = "Unique ID - People"
-		mdPrefix = ["oai_dc", "eac-cpf"]
+		mdPrefix = ["oai_dc", "eac-cpf", "rif"]
 		jsonMapData = [
 			"header":[ // control header for identifying this record
 				"type":"record_people"
@@ -336,6 +336,14 @@ class OaiHarvestTest extends GroovyTestCase {
 								"institution": "University of Examples",
 								"RIF-CS Group": "The University of Examples, Australia"
 							]
+						],
+						"rif": [
+							"urlBase":"http://localhost:9001/mint/",
+							"curation":["pidProperty":"localPid"],
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
 						]
 					]
 				]
@@ -349,6 +357,7 @@ class OaiHarvestTest extends GroovyTestCase {
 		rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
 		boolean hasEac = false
 		boolean hasOai = false
+		boolean hasRif = false
 		rows.each {rowEntry->
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
@@ -357,8 +366,10 @@ class OaiHarvestTest extends GroovyTestCase {
 				hasOai = true
 			if ("eac-cpf" == rowEntry.metadataPrefix)
 				hasEac = true
-			
-			assertTrue(hasOai || hasEac)
+			if ("rif" == rowEntry.metadataPrefix)
+				hasRif = true
+				
+			assertTrue(hasOai || hasEac || hasRif)
 			assertNotNull(rowEntry.xmlEntry)
 			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
 			// validating header..
@@ -373,6 +384,8 @@ class OaiHarvestTest extends GroovyTestCase {
 				assertEquals(jsonMapData.data[0].recordId, eacCpf.control.recordId.toString())
 				assertEquals(jsonMapData.data[0].constants["eac-cpf"].curation.nlaIntegration.agencyCode, eacCpf.control.maintenanceAgency.agencyCode.toString())
 				assertEquals(jsonMapData.data[0].constants["eac-cpf"].curation.nlaIntegration.agencyName, eacCpf.control.maintenanceAgency.agencyName.toString())
+				assertEquals(jsonMapData.data[0].metadata.data.Given_Name, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType=="forename"}[0].toString())
+				assertEquals(jsonMapData.data[0].metadata.data.Family_Name, eacCpf.cpfDescription.identity.nameEntry.part.findAll{it.@localType=="surname"}[0].toString())
 				// TODO: add more fields to check
 			}
 			if ("oai_dc" == rowEntry.metadataPrefix) {
@@ -384,8 +397,19 @@ class OaiHarvestTest extends GroovyTestCase {
 				assertEquals(name, oaiDc["title"].toString())
 				assertEquals("'Parties' entry for '$name'", oaiDc["description"].toString())
 			}
+			if ("rif" == rowEntry.metadataPrefix) {
+				logger.info("Validating RIF")
+				def rif = parsedXml.metadata["registryObjects"]
+				
+				def primaryName = rif.registryObject.party.name.findAll{it.@type == "primary"}
+				assertEquals(1, primaryName.size())
+				
+				assertEquals(jsonMapData.data[0].metadata.data.Given_Name, primaryName[0].namePart.findAll{it.@type=="given"}[0].toString())
+				assertEquals(jsonMapData.data[0].metadata.data.Family_Name, primaryName[0].namePart.findAll{it.@type=="family"}[0].toString())
+				// TODO: add more fields to check
+			}
 		}
-		assertTrue(hasOai && hasEac)
+		assertTrue(hasOai && hasEac && hasRif)
 		logger.info("-------------------------------------------------------------------------")
 		logger.info("Testing Record Update...")
 		logger.info("-------------------------------------------------------------------------")
@@ -401,7 +425,7 @@ class OaiHarvestTest extends GroovyTestCase {
 			assertNotNull(rowEntry)
 			assertEquals(recordId, rowEntry.recordId)
 			assertEquals(recordSource, rowEntry.source)
-			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix)
+			assertTrue("eac-cpf" == rowEntry.metadataPrefix || "oai_dc" == rowEntry.metadataPrefix || "rif" == rowEntry.metadataPrefix)
 			assertNotNull(rowEntry.xmlEntry)
 			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
 			// validating header..

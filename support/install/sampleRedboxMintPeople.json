@@ -6,7 +6,7 @@
 		{
 			"recordId":"recordId_People",
 			"dateStamp":"2014-03-18T06:09:03Z",
-			"metadataPrefix":["oai_dc","eac-cpf"],
+			"metadataPrefix":["oai_dc","eac-cpf", "rif"],
 			"source":"Sample Data JSON file",
 			"metadata": { 
 				"recordIDPrefix": "redbox-mint.googlecode.com/parties/people/",
@@ -105,6 +105,14 @@
 							"agencyName":"AgencyName"
 						}
 					},
+					"redbox.identity": {
+						"institution": "University of Examples",
+						"RIF-CS Group": "The University of Examples, Australia"
+					}
+				},
+				"rif": {
+					"urlBase":"http://localhost:9001/mint/",
+					"curation":{"pidProperty":"localPid"},
 					"redbox.identity": {
 						"institution": "University of Examples",
 						"RIF-CS Group": "The University of Examples, Australia"

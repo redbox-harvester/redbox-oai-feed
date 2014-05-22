@@ -17,9 +17,10 @@ message = "Added Legacy Utility instance to template."
  */
 class LegacyUtil {
 	private static final Logger logger = Logger.getLogger(LegacyUtil.class)
-		
+	
 	def data
 	def format
+	def systemConfig
 	
 	public String encodeXml(String str) {
 		return XmlUtil.escapeXml(str)
@@ -29,34 +30,83 @@ class LegacyUtil {
 	 * 
 	 */
 	public String getString(String defaultStr, String... fields) {
-		return extractString(data.constants[format], defaultStr, fields)
+		if (!systemConfig) {
+			systemConfig = new JsonSimpleWrapper(data.constants[format])
+		}
+		return systemConfig.getString(defaultStr, fields)
 	}
 	
 	/**
-	 * Replaces $util.get
+	 * Replaces $util.get, item must refer the 'data.metadata'
 	 * 
 	 */
-	public String get(item, String... fields) {
-		extractString(data.metadata, "", fields)
+	public String get(JsonSimpleWrapper item, String... fields) {	
+		item.getString("", fields)
 	}
 	/**
-	 * Replaces $util.getMetadata
+	 * Replaces $util.getMetadata - object must refer the 'data.objectMetadata'
 	 */
-	public String getMetadata(object, String property) {
-		extractString(data.objectMetadata, "", property)
+	public String getMetadata(JsonSimpleWrapper object, String property) {
+		object.getString("", property)
+	}
+	
+	public JsonSimpleWrapper getItem() {
+		return new JsonSimpleWrapper(data.metadata)
+	}
+	
+	public JsonSimpleWrapper getObject() {
+		return new JsonSimpleWrapper(data.objectMetadata)
+	}
+}
+/**
+ * To prevent backbreaking porting. PLEASE DO NOT USE IN NEW CODE. PLEASE.
+ */
+class JsonSimpleWrapper {
+	def data
+	
+	public JsonSimpleWrapper(data) {
+		this.data = data
+	}
+	
+	public List<JsonSimpleWrapper> getJsonSimpleList(String... fields) {
+		def dList = getObject(null, fields)
+		List list = []
+		if (dList) {
+			dList.each {d->
+				list << new JsonSimpleWrapper(d)
+			}
+		}
+		return list
+	}
+	
+	public boolean getBoolean(boolean retVal, String... fields) {
+		def obj = getObject(retVal, fields)
+		if (obj) {
+			if (obj instanceof String) {
+				retVal = Boolean.parseBoolean(obj)
+			} else {
+				// no more number checking, etc. beware!
+				retVal = obj
+			}
+		}
+		return retVal
+	}
+	
+	public String getString(String retVal, String... fields) {
+		return getObject(retVal, fields)
 	}
 	/**
 	 * Convenience method for developer sanity.
-	 * 
+	 *
 	 */
-	private String extractString(obj, String defaultStr, String... fields) {
+	def getObject(retVal, String... fields) {
 		StringBuilder fullFieldBuff = new StringBuilder()
 		fields.each {field->
 			fullFieldBuff.append('["')
 			fullFieldBuff.append(field)
 			fullFieldBuff.append('"]')
 		}
-		String val = Eval.x(obj, "x${fullFieldBuff.toString()}")
-		return val ? val : defaultStr
+		def val = Eval.x(data, "x${fullFieldBuff.toString()}")
+		return val ? val : retVal
 	}
 }

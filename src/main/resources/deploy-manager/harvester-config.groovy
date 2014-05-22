@@ -96,6 +96,12 @@ environments {
 					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
 				}
 			}
+			record_people_rif {
+				templates = ["people/rif.vm", "people/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
 		}
 		cloningSplitter {
 			srcArray = "metadataPrefix"
