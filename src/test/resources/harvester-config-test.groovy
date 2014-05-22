@@ -109,6 +109,24 @@ environments {
 					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
 				}
 			}
+			record_group_oai_dc {
+				templates = ["group/oai_dc.vm", "group/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
+			record_group_rif {
+				templates = ["group/rif.vm", "group/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
+			record_service_rif {
+				templates = ["service/rif.vm", "service/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
 		}
 		cloningSplitter {
 			srcArray = "metadataPrefix"

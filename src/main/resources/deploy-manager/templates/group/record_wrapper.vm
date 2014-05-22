@@ -1,0 +1,10 @@
+<record>
+	<header> 
+	    <identifier>$data.get('recordId')</identifier> 
+	    <datestamp>$data.get('dateStamp')</datestamp> 
+	    <setSpec>Parties_Groups</setSpec> 
+	</header> 
+    <metadata>
+    $currentRendering
+    </metadata>
+</record>

@@ -1,0 +1,173 @@
+{
+	"header":{
+		"type":"record_group"
+	},
+	"data":[ 
+		{
+			"recordId":"d2848c47c708d6834b86a1cca9e4c2c1",
+			"dateStamp":"2014-03-18T06:09:03Z",
+			"metadataPrefix":["oai_dc", "rif"],
+			"source":"Sample Data JSON file",
+			"metadata": {
+			    "recordIDPrefix": "redbox-mint.googlecode.com/parties/group/",
+			    "data": {
+			        "ID": "1",
+			        "Name": "University of Examples",
+			        "Email": "info@example.edu.au",
+			        "Phone": "012 345 6789",
+			        "Parent_Group_ID": "",
+			        "URI": "http://id.example.edu.au",
+			        "NLA_Party_Identifier": "http://nla.gov.au/nla.party-000001",
+			        "Homepage": "http://www.example.edu.au",
+			        "Description": "A non-existent institution offering education and research of dubious use"
+			    },
+			    "metadata": {
+			        "dc.identifier": "redbox-mint.googlecode.com/parties/group/1"
+			    },
+			    "responses": [
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "5322086dccb0f5db54d84a44476b9de9",
+			            "task": "curation-pending"
+			        },
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "4a032578267d4f68537228e4ed8422fe",
+			            "task": "curation-pending"
+			        },
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "f8089bfbdedb57b3ade75f32d2dd4812",
+			            "task": "curation-pending"
+			        },
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+			            "task": "curation-pending"
+			        },
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "be69b9b1d2dbc0de2f1629bef3b300f2",
+			            "task": "curation-pending"
+			        },
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "aa602ace95f5a980087ac5ea6365032e",
+			            "task": "curation-pending"
+			        },
+			        {
+			            "broker": "tcp://localhost:9201",
+			            "oid": "77b31218bb35b2aa8d9741ad04025678",
+			            "task": "curation-pending"
+			        }
+			    ],
+			    "relationships": [
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/5322086dccb0f5db54d84a44476b9de9",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/5322086dccb0f5db54d84a44476b9de9",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "5322086dccb0f5db54d84a44476b9de9",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/5322086dccb0f5db54d84a44476b9de9\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/5322086dccb0f5db54d84a44476b9de9\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"5322086dccb0f5db54d84a44476b9de9\"}"
+			        },
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/4a032578267d4f68537228e4ed8422fe",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/4a032578267d4f68537228e4ed8422fe",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "4a032578267d4f68537228e4ed8422fe",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/4a032578267d4f68537228e4ed8422fe\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/4a032578267d4f68537228e4ed8422fe\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"4a032578267d4f68537228e4ed8422fe\"}"
+			        },
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/f8089bfbdedb57b3ade75f32d2dd4812",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/f8089bfbdedb57b3ade75f32d2dd4812",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "f8089bfbdedb57b3ade75f32d2dd4812",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/f8089bfbdedb57b3ade75f32d2dd4812\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/f8089bfbdedb57b3ade75f32d2dd4812\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"f8089bfbdedb57b3ade75f32d2dd4812\"}"
+			        },
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/2e8cbfb7a6e9a43efcf1051f3eb0f5f7\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/2e8cbfb7a6e9a43efcf1051f3eb0f5f7\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"2e8cbfb7a6e9a43efcf1051f3eb0f5f7\"}"
+			        },
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/be69b9b1d2dbc0de2f1629bef3b300f2",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/be69b9b1d2dbc0de2f1629bef3b300f2",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "be69b9b1d2dbc0de2f1629bef3b300f2",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/be69b9b1d2dbc0de2f1629bef3b300f2\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/be69b9b1d2dbc0de2f1629bef3b300f2\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"be69b9b1d2dbc0de2f1629bef3b300f2\"}"
+			        },
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/aa602ace95f5a980087ac5ea6365032e",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/aa602ace95f5a980087ac5ea6365032e",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "aa602ace95f5a980087ac5ea6365032e",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/aa602ace95f5a980087ac5ea6365032e\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/aa602ace95f5a980087ac5ea6365032e\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"aa602ace95f5a980087ac5ea6365032e\"}"
+			        },
+			        {
+			            "identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/77b31218bb35b2aa8d9741ad04025678",
+			            "curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/77b31218bb35b2aa8d9741ad04025678",
+			            "broker": "tcp://localhost:9201",
+			            "isCurated": true,
+			            "relationship": "hasPart",
+			            "oid": "77b31218bb35b2aa8d9741ad04025678",
+			            "uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/77b31218bb35b2aa8d9741ad04025678\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/77b31218bb35b2aa8d9741ad04025678\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"77b31218bb35b2aa8d9741ad04025678\"}"
+			        }
+			    ]
+			},
+			"objectMetadata":{
+				"render-pending":false,
+				"repository.type":"Parties",
+				"metaPid":"TF-OBJ-META",
+				"jsonConfigOid":"62c73bcca2807e9966450bba20205d86",
+				"ready_to_publish":"ready",
+				"jsonConfigPid":"Parties_Groups.json",
+				"repository.name":"Groups",
+				"published":true,
+				"rulesOid":"5cb8939d887282808ea2612c5bfc925d",
+				"objectId":"d2848c47c708d6834b86a1cca9e4c2c1",
+				"scriptType":"python",
+				"rulesPid":"Parties_Groups.py",
+				"localPid":"http://demo.redboxresearchdata.com.au/mint/published/detail/d2848c47c708d6834b86a1cca9e4c2c1"
+			},
+			"constants": {
+				"oai_dc": {
+					"curation":{"pidProperty":"localPid"} 
+				},
+				"eac-cpf": {
+					"curation":{
+						"pidProperty":"localPid",
+						"nlaIntegration":{
+							"agencyCode":"AgencyCode",
+							"agencyName":"AgencyName"
+						}
+					},
+					"redbox.identity": {
+						"institution": "University of Examples",
+						"RIF-CS Group": "The University of Examples, Australia"
+					}
+				},
+				"rif": {
+					"urlBase":"http://localhost:9001/mint/",
+					"curation":{"pidProperty":"localPid"},
+					"redbox.identity": {
+						"institution": "University of Examples",
+						"RIF-CS Group": "The University of Examples, Australia"
+					}
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,62 @@
+{
+	"header":{
+		"type":"record_service"
+	},
+	"data":[ 
+		{
+			"recordId":"db19981770633dc8656c84b2464bcb14",
+			"dateStamp":"2014-03-18T06:09:03Z",
+			"metadataPrefix":[ "rif"],
+			"source":"Sample Data JSON file",
+			"metadata": { 
+			    "recordIDPrefix": "redbox-mint.googlecode.com/services/",
+			    "data": {
+			        "ID": "1",
+			        "Name": "University of Examples - ReDBox, Metadata Registry",
+			        "Type": "assemble",
+			        "ANZSRC_FOR_1": "",
+			        "ANZSRC_FOR_2": "",
+			        "ANZSRC_FOR_3": "",
+			        "Location": "123 Example Street, City, STATE",
+			        "Coverage_Temporal_From": "",
+			        "Coverage_Temporal_To": "",
+			        "Coverage_Spatial_Type": "",
+			        "Coverage_Spatial_Value": "",
+			        "Existence_Start": "",
+			        "Existence_End": "",
+			        "Website": "http://service.example.edu.au/",
+			        "Data_Quality_Information": "http://service.example.edu.au/dataquality",
+			        "Reuse_Information": "http://service.example.edu.au/reuse",
+			        "Access_Policy": "http://service.example.edu.au/access",
+			        "URI": "",
+			        "Description": "ReDBox is a metadata registry application for describing research data."
+			    },
+			    "metadata": {
+			        "dc.identifier": "redbox-mint.googlecode.com/services/1"
+			    }
+			},
+			"objectMetadata":{
+				"render-pending":false,
+				"repository.type":"Services",
+				"metaPid":"TF-OBJ-META",
+				"jsonConfigOid":"f05ac885408193723707a78755bdeff",
+				"jsonConfigPid":"Services.json",
+				"repository.name":"Local Services",
+				"rulesOid":"8cb984551ac43f9f745187d87ae3b1e7",
+				"objectId":"db19981770633dc8656c84b2464bcb14",
+				"scriptType":"python",
+				"rulesPid":"Services.py"
+			},
+			"constants": {
+				"rif": {
+					"urlBase":"http://localhost:9001/mint/",
+					"curation":{"pidProperty":"localPid"},
+					"redbox.identity": {
+						"institution": "University of Examples",
+						"RIF-CS Group": "The University of Examples, Australia"
+					}
+				}
+			}
+		}
+	]
+}

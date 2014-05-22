@@ -5,5 +5,5 @@
 $util.setData($data)
 #set($item = $util.getItem())
 #set($object = $util.getObject())
-#set($oid = $data.get('recordId'))
+#set($oid = $object.getString('', 'objectId'))
 ## END PORTING THIS TEMPLATE FOR HARVESTER

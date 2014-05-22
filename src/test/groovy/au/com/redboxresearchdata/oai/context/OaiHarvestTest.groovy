@@ -38,11 +38,17 @@ import org.springframework.jmx.support.MBeanServerFactoryBean
 class OaiHarvestTest extends GroovyTestCase {
 	private static final Logger logger = Logger.getLogger(OaiHarvestTest.class)
 	
-	void testHarvest() {
+	def grailsApplication = [:]
+	def sql
+	def appContext
+	def config
+	def grailsConfig
+	MessageChannel oaiHarvestMainChannel
+	
+	void setUp() {
 		new File ("target/test/db/").deleteDir()
-		def config = new ConfigSlurper("test").parse(new File("src/test/resources/harvester-config-test.groovy").toURI().toURL())
-		def grailsConfig = ["environment":"test", "clientConfigObj":config]		
-		def grailsApplication = [:]		
+		config = new ConfigSlurper("test").parse(new File("src/test/resources/harvester-config-test.groovy").toURI().toURL())
+		grailsConfig = ["environment":"test", "clientConfigObj":config]
 		grailsApplication.config = grailsConfig
 		
 		MBeanServerFactoryBean mbeanServer = new MBeanServerFactoryBean()
@@ -54,16 +60,39 @@ class OaiHarvestTest extends GroovyTestCase {
 		
 		logger.info("Starting SI...")
 		String[] locs = ["file:"+config.client.siPath]
-		def appContext = new FileSystemXmlApplicationContext(locs, true, parentContext)
-		appContext.registerShutdownHook()		
-		def sql = new Sql((DataSource)appContext.getBean("dataSource"))		 
+		appContext = new FileSystemXmlApplicationContext(locs, true, parentContext)
+		appContext.registerShutdownHook()
+		sql = new Sql((DataSource)appContext.getBean("dataSource"))
+		
+		oaiHarvestMainChannel = appContext.getBean("oaiHarvestMainChannel", MessageChannel.class)
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void tearDown() {
+		logger.info("Test completed! Shutting down SI...")
+		def mbeanExporter = appContext.getBean("mbeanExporterOaiFeed")
+		mbeanExporter.stopActiveComponents(false, 5000)
+		logger.info("Shutdown command success.")
+	}
+	// ----- The main test method ----
+	void testHarvest() {
+		doMetadataFormat()
+		doIdentity()
+		doSet()
+		doRecordPerson()
+		doRecordPeople()
+		doRecordGroup()
+		doRecordService()
+	}
+	// ------ The Tests -------------
+	// ---------------------------------------------------------------------------------------------------
+	void doMetadataFormat() {
 		logger.info("Testing Metadataformat")
 		logger.info("Creating DB table: ${config.harvest.sql.metadata.init}")
 		sql.execute(config.harvest.sql.metadata.init)
 		def metadataPrefix = "eac-cpf"
 		def oai_dc = "oai_dc"
 		def schemaTxt = "urn:isbn:1-931666-33-4 http://eac.staatsbibliothek-berlin.de/schema/cpf.xsd"
-		def metadataNamespace = "urn:isbn:1-931666-33-4" 				
+		def metadataNamespace = "urn:isbn:1-931666-33-4"
 		def request = """
 		{
 			"header": {
@@ -84,26 +113,27 @@ class OaiHarvestTest extends GroovyTestCase {
 		}
 		"""
 		logger.info("Sending test metadataformat message....")
-		final MessageChannel oaiHarvestMainChannel = appContext.getBean("oaiHarvestMainChannel", MessageChannel.class)
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
-		logger.info("Validating metadataFormat....")					
+		logger.info("Validating metadataFormat....")
 		def row = sql.firstRow(config.harvest.sql.metadata.select, [metadataPrefix])
-		assertNotNull(row)		
+		assertNotNull(row)
 		assertEquals(row.metadataPrefix, metadataPrefix)
 		assertEquals(row.schemaTxt, schemaTxt)
-		assertEquals(row.metadataNamespace, metadataNamespace)		
+		assertEquals(row.metadataNamespace, metadataNamespace)
 		row = sql.firstRow(config.harvest.sql.metadata.select, [oai_dc])
-		assertNotNull(row)		
+		assertNotNull(row)
 		assertEquals(row.metadataPrefix, oai_dc)
 		assertEquals(row.schemaTxt, schemaTxt)
 		assertEquals(row.metadataNamespace, metadataNamespace)
 		logger.info("Metadataformat passed.")
-	  
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void doIdentity() {
 		logger.info("Testing Identity")
 		logger.info("Creating DB table:${config.harvest.sql.identify.init}")
 		sql.execute(config.harvest.sql.identify.init)
 		def xmlEntry = "<Identify>    <repositoryName>The Fascinator</repositoryName>    <baseURL>http://demo.redboxresearchdata.com.au/mint/default</baseURL>    <protocolVersion>2.0</protocolVersion>    <adminEmail>fascinator@usq.edu.au</adminEmail>      <earliestDatestamp>0001-01-01T00:00:00Z</earliestDatestamp>    <deletedRecord>persistent</deletedRecord>    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>    <description>        <oai-identifier xsi:schemaLocation='http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd' xmlns='http://www.openarchives.org/OAI/2.0/oai-identifier'>            <scheme>oai</scheme>            <repositoryIdentifier>fascinator.usq.edu.au</repositoryIdentifier>            <delimiter>:</delimiter>            <sampleIdentifier>oai:fascinator.usq.edu.au:5e8ff9bf55ba3508199d22e984129be6</sampleIdentifier>        </oai-identifier>    </description></Identify> "
-		request = """
+		def request = """
 		{
 			"header": {
 				"type":"identify"
@@ -118,16 +148,19 @@ class OaiHarvestTest extends GroovyTestCase {
 		logger.info("Sending Identity message....")
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Identity....")
-		row = sql.firstRow(config.harvest.sql.identify.select)
+		def row = sql.firstRow(config.harvest.sql.identify.select)
 		assertNotNull(row)
 		assertEquals(xmlEntry.toString(), row.xmlEntry)
-		logger.info("Identity passed.")		
+		logger.info("Identity passed.")
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void doSet() {
 		logger.info("Testing Sets")
 		logger.info("Creating DB table:${config.harvest.sql.set.init}")
 		sql.execute(config.harvest.sql.set.init)
 		def spec = "Parties_People"
-		xmlEntry = "<set><setSpec>Parties_People</setSpec><setName>Parties - People</setName></set>"
-		request = """
+		def xmlEntry = "<set><setSpec>Parties_People</setSpec><setName>Parties - People</setName></set>"
+		def request = """
 		{
 			"header": {
 				"type":"set"
@@ -143,10 +176,13 @@ class OaiHarvestTest extends GroovyTestCase {
 		logger.info("Sending Set message....")
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Set....")
-		row = sql.firstRow(config.harvest.sql.set.select)
+		def row = sql.firstRow(config.harvest.sql.set.select)
 		assertNotNull(row)
 		assertEquals(xmlEntry.toString(), row.xmlEntry)
 		assertEquals(spec, row.spec)
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void doRecordPerson() {
 		logger.info("Testing Record Person...")
 		logger.info("Testing CurationManager data feed.....Person")
 		logger.info("Creating DB table:${config.harvest.sql.record.init}")
@@ -184,7 +220,7 @@ class OaiHarvestTest extends GroovyTestCase {
 				]
 			]
 		]
-		request = new JsonBuilder(jsonMapData).toString()
+		def request = new JsonBuilder(jsonMapData).toString()
 		logger.info("Sending Record message....")
 		logger.debug(request)
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
@@ -220,12 +256,16 @@ class OaiHarvestTest extends GroovyTestCase {
 				assertEquals(jsonMapData.data[0].jsonData.description, oaiDc["description"].toString())
 			}
 		}
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void doRecordPeople() {		 
 		logger.info("-------------------------------------------------------------------------")
 		logger.info("Testing for RB/Mint Data feed......People")
 		logger.info("-------------------------------------------------------------------------")
-		recordId = "Unique ID - People"
-		mdPrefix = ["oai_dc", "eac-cpf", "rif"]
-		jsonMapData = [
+		def recordId = "e6656a2c87d086b015db7e4d9e60c65e"
+		def mdPrefix = ["oai_dc", "eac-cpf", "rif"]
+		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
+		def jsonMapData = [
 			"header":[ // control header for identifying this record
 				"type":"record_people"
 			],
@@ -302,7 +342,6 @@ class OaiHarvestTest extends GroovyTestCase {
 					    ]
 					],
 					"objectMetadata":[
-						"recordId":recordId,
 						"render-pending":false,
 						"repository.type":"Parties",
 						"metaPid":"TF-OBJ-META",
@@ -349,12 +388,12 @@ class OaiHarvestTest extends GroovyTestCase {
 				]
 			]
 		]
-		request = new JsonBuilder(jsonMapData).toString()
+		def request = new JsonBuilder(jsonMapData).toString()
 		logger.info("Sending Record message....")
 		logger.debug(request)
 		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
 		logger.info("Validating Record....")
-		rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
+		def rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
 		boolean hasEac = false
 		boolean hasOai = false
 		boolean hasRif = false
@@ -434,10 +473,10 @@ class OaiHarvestTest extends GroovyTestCase {
 			assertEquals("Parties_People", parsedXml.header.setSpec.toString())
 			if ("eac-cpf" == rowEntry.metadataPrefix) {
 				def eacCpf = parsedXml.metadata["eac-cpf"]
-				logger.info("Validating EAC CPF ------------")
+				logger.info("Validating Updated EAC CPF ------------")
 			}
 			if ("oai_dc" == rowEntry.metadataPrefix) {
-				logger.info("Validating OAI-DC")
+				logger.info("Validating Updated OAI-DC")
 				def oaiDc = parsedXml.metadata["dc"]
 				assertEquals(jsonMapData.data[0].objectMetadata.localPid, oaiDc["identifier"].toString())
 				String name = "${jsonMapData.data[0].metadata.data.Honorific} ${jsonMapData.data[0].metadata.data.Given_Name} ${jsonMapData.data[0].metadata.data.Family_Name}"
@@ -446,11 +485,308 @@ class OaiHarvestTest extends GroovyTestCase {
 			}
 		}
 		
-		logger.info("Testing Record passed.")
-		
-		logger.info("Test success! Shutting down SI...")
-		def mbeanExporter = appContext.getBean("mbeanExporterOaiFeed")
-		mbeanExporter.stopActiveComponents(false, 5000)
-		logger.info("Shutdown command success.")
+		logger.info("Testing Record People passed.")
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void doRecordGroup() {
+		logger.info("-------------------------------------------------------------------------")
+		logger.info("Testing for RB/Mint Data feed......Group")
+		logger.info("-------------------------------------------------------------------------")
+		def recordId = "d2848c47c708d6834b86a1cca9e4c2c1"
+		def mdPrefix = ["rif", "oai_dc"]
+		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
+		def jsonMapData = [
+			"header":[ // control header for identifying this record
+				"type":"record_group"
+			],
+			"data":[ // the actual payload
+				[ // first entry of the payload
+					"recordId":recordId,
+					"dateStamp":"2014-03-18T06:09:03Z",
+					"metadataPrefix":mdPrefix,
+					"source":recordSource,
+					"metadata": [ // the actual data from RB/Mint/CM
+						"recordIDPrefix": "redbox-mint.googlecode.com/parties/group/",
+						"data": [
+							"ID": "1",
+							"Name": "University of Examples",
+							"Email": "info@example.edu.au",
+							"Phone": "012 345 6789",
+							"Parent_Group_ID": "",
+							"URI": "http://id.example.edu.au",
+							"NLA_Party_Identifier": "http://nla.gov.au/nla.party-000001",
+							"Homepage": "http://www.example.edu.au",
+							"Description": "A non-existent institution offering education and research of dubious use"
+						],
+						"metadata": [
+							"dc.identifier": "redbox-mint.googlecode.com/parties/group/1"
+						],
+						"relationships": [
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/5322086dccb0f5db54d84a44476b9de9",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/5322086dccb0f5db54d84a44476b9de9",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "5322086dccb0f5db54d84a44476b9de9",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/5322086dccb0f5db54d84a44476b9de9\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/5322086dccb0f5db54d84a44476b9de9\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"5322086dccb0f5db54d84a44476b9de9\"}"
+							],
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/4a032578267d4f68537228e4ed8422fe",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/4a032578267d4f68537228e4ed8422fe",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "4a032578267d4f68537228e4ed8422fe",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/4a032578267d4f68537228e4ed8422fe\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/4a032578267d4f68537228e4ed8422fe\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"4a032578267d4f68537228e4ed8422fe\"}"
+							],
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/f8089bfbdedb57b3ade75f32d2dd4812",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/f8089bfbdedb57b3ade75f32d2dd4812",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "f8089bfbdedb57b3ade75f32d2dd4812",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/f8089bfbdedb57b3ade75f32d2dd4812\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/f8089bfbdedb57b3ade75f32d2dd4812\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"f8089bfbdedb57b3ade75f32d2dd4812\"}"
+							],
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "2e8cbfb7a6e9a43efcf1051f3eb0f5f7",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/2e8cbfb7a6e9a43efcf1051f3eb0f5f7\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/2e8cbfb7a6e9a43efcf1051f3eb0f5f7\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"2e8cbfb7a6e9a43efcf1051f3eb0f5f7\"}"
+							],
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/be69b9b1d2dbc0de2f1629bef3b300f2",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/be69b9b1d2dbc0de2f1629bef3b300f2",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "be69b9b1d2dbc0de2f1629bef3b300f2",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/be69b9b1d2dbc0de2f1629bef3b300f2\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/be69b9b1d2dbc0de2f1629bef3b300f2\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"be69b9b1d2dbc0de2f1629bef3b300f2\"}"
+							],
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/aa602ace95f5a980087ac5ea6365032e",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/aa602ace95f5a980087ac5ea6365032e",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "aa602ace95f5a980087ac5ea6365032e",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/aa602ace95f5a980087ac5ea6365032e\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/aa602ace95f5a980087ac5ea6365032e\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"aa602ace95f5a980087ac5ea6365032e\"}"
+							],
+							[
+								"identifier": "http://demo.redboxresearchdata.com.au/mint/published/detail/77b31218bb35b2aa8d9741ad04025678",
+								"curatedPid": "http://demo.redboxresearchdata.com.au/mint/published/detail/77b31218bb35b2aa8d9741ad04025678",
+								"broker": "tcp://localhost:9201",
+								"isCurated": true,
+								"relationship": "hasPart",
+								"oid": "77b31218bb35b2aa8d9741ad04025678",
+								"uniqueString": "{\"identifier\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/77b31218bb35b2aa8d9741ad04025678\",\"curatedPid\":\"http:\\/\\/demo.redboxresearchdata.com.au\\/mint\\/published\\/detail\\/77b31218bb35b2aa8d9741ad04025678\",\"broker\":\"tcp:\\/\\/localhost:9201\",\"isCurated\":true,\"relationship\":\"hasPart\",\"oid\":\"77b31218bb35b2aa8d9741ad04025678\"}"
+							]
+						]
+					],
+					"objectMetadata":[
+						"render-pending":false,
+						"repository.type":"Parties",
+						"metaPid":"TF-OBJ-META",
+						"jsonConfigOid":"62c73bcca2807e9966450bba20205d86",
+						"ready_to_publish":"ready",
+						"jsonConfigPid":"Parties_Groups.json",
+						"repository.name":"Groups",
+						"published":true,
+						"rulesOid":"5cb8939d887282808ea2612c5bfc925d",
+						"objectId":"d2848c47c708d6834b86a1cca9e4c2c1",
+						"scriptType":"python",
+						"rulesPid":"Parties_Groups.py",
+						"localPid":"http://demo.redboxresearchdata.com.au/mint/published/detail/d2848c47c708d6834b86a1cca9e4c2c1"						
+					],
+					"constants": [
+						"oai_dc": [
+							"curation":["pidProperty":"localPid"] // using the local Pid as identifier
+						],
+						"rif": [
+							"urlBase":"http://localhost:9001/mint/",
+							"curation":["pidProperty":"localPid"],
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
+						]
+					]
+				]
+			]
+		]
+		def request = new JsonBuilder(jsonMapData).toString()
+		logger.info("Sending Record message....")
+		logger.debug(request)
+		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
+		logger.info("Validating Record....")
+		def rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
+		boolean hasOai = false
+		boolean hasRif = false
+		rows.each {rowEntry->
+			assertNotNull(rowEntry)
+			assertEquals(recordId, rowEntry.recordId)
+			assertEquals(recordSource, rowEntry.source)
+			if ("oai_dc" == rowEntry.metadataPrefix)
+				hasOai = true
+			if ("rif" == rowEntry.metadataPrefix)
+				hasRif = true
+				
+			assertTrue(hasOai || hasRif)
+			assertNotNull(rowEntry.xmlEntry)
+			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].recordId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Parties_Groups", parsedXml.header.setSpec.toString())
+			
+			if ("oai_dc" == rowEntry.metadataPrefix) {
+				logger.info("Validating OAI-DC")
+				def oaiDc = parsedXml.metadata["dc"]
+				
+				assertEquals(jsonMapData.data[0].objectMetadata.localPid, oaiDc["identifier"].toString())
+				String name = "${jsonMapData.data[0].metadata.data.Name}"
+				assertEquals(name, oaiDc["title"].toString())
+				assertEquals("'Parties' entry for '$name'", oaiDc["description"].toString())
+			}
+			if ("rif" == rowEntry.metadataPrefix) {
+				logger.info("Validating RIF")
+				def rif = parsedXml.metadata["registryObjects"]
+				
+				def primaryName = rif.registryObject.party.name.findAll{it.@type == "primary"}
+				assertEquals(1, primaryName.size())
+				
+				assertEquals(jsonMapData.data[0].metadata.data.Name, primaryName[0].namePart.findAll{it.@type=="title"}[0].toString())
+				
+				// TODO: add more fields to check
+			}
+		}
+		assertTrue(hasOai && hasRif)
+		logger.info("Testing Record Group passed.")
+	}
+	// ---------------------------------------------------------------------------------------------------
+	void doRecordService() {
+		logger.info("-------------------------------------------------------------------------")
+		logger.info("Testing for RB/Mint Data feed......Service")
+		logger.info("-------------------------------------------------------------------------")
+		def recordId = "db19981770633dc8656c84b2464bcb14"
+		def mdPrefix = [ "rif"]
+		def recordSource = "Unit-Test: Any arbitrary string that identifies the source of this publish request."
+		def jsonMapData = [
+			"header":[ // control header for identifying this record
+				"type":"record_service"
+			],
+			"data":[ // the actual payload
+				[ // first entry of the payload
+					"recordId":recordId,
+					"dateStamp":"2014-03-18T06:09:03Z",
+					"metadataPrefix":mdPrefix,
+					"source":recordSource,
+					"metadata": [ // the actual data from RB/Mint/CM
+						"recordIDPrefix": "redbox-mint.googlecode.com/services/",
+					    "data": [
+					        "ID": "1",
+					        "Name": "University of Examples - ReDBox, Metadata Registry",
+					        "Type": "assemble",
+					        "ANZSRC_FOR_1": "",
+					        "ANZSRC_FOR_2": "",
+					        "ANZSRC_FOR_3": "",
+					        "Location": "123 Example Street, City, STATE",
+					        "Coverage_Temporal_From": "",
+					        "Coverage_Temporal_To": "",
+					        "Coverage_Spatial_Type": "",
+					        "Coverage_Spatial_Value": "",
+					        "Existence_Start": "",
+					        "Existence_End": "",
+					        "Website": "http://service.example.edu.au/",
+					        "Data_Quality_Information": "http://service.example.edu.au/dataquality",
+					        "Reuse_Information": "http://service.example.edu.au/reuse",
+					        "Access_Policy": "http://service.example.edu.au/access",
+					        "URI": "",
+					        "Description": "ReDBox is a metadata registry application for describing research data."
+					    ],
+					    "metadata": [
+					        "dc.identifier": "redbox-mint.googlecode.com/services/1"
+					    ]
+					],
+					"objectMetadata":[
+						"render-pending":false,
+						"repository.type":"Services",
+						"metaPid":"TF-OBJ-META",
+						"jsonConfigOid":"f05ac885408193723707a78755bdeff",
+						"jsonConfigPid":"Services.json",
+						"repository.name":"Local Services",
+						"rulesOid":"8cb984551ac43f9f745187d87ae3b1e7",
+						"objectId":"db19981770633dc8656c84b2464bcb14",
+						"scriptType":"python",
+						"rulesPid":"Services.py"
+						
+					],
+					"constants": [
+						"oai_dc": [
+							"curation":["pidProperty":"localPid"] // using the local Pid as identifier
+						],
+						"eac-cpf": [
+							"curation":[
+								"pidProperty":"localPid",
+								"nlaIntegration":[
+									"agencyCode":"AgencyCode",
+									"agencyName":"AgencyName"
+								]
+							],
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
+						],
+						"rif": [
+							"urlBase":"http://localhost:9001/mint/",
+							"curation":["pidProperty":"localPid"],
+							"redbox.identity": [
+								"institution": "University of Examples",
+								"RIF-CS Group": "The University of Examples, Australia"
+							]
+						]
+					]
+				]
+			]
+		]
+		def request = new JsonBuilder(jsonMapData).toString()
+		logger.info("Sending Record message....")
+		logger.debug(request)
+		oaiHarvestMainChannel.send(MessageBuilder.withPayload(request).build())
+		logger.info("Validating Record....")
+		def rows = sql.rows([recordId:recordId],config.harvest.sql.record.select)
+		boolean hasRif = false
+		rows.each {rowEntry->
+			assertNotNull(rowEntry)
+			assertEquals(recordId, rowEntry.recordId)
+			assertEquals(recordSource, rowEntry.source)
+			if ("rif" == rowEntry.metadataPrefix)
+				hasRif = true
+				
+			assertTrue(hasRif)
+			assertNotNull(rowEntry.xmlEntry)
+			def parsedXml = new XmlSlurper().parseText(rowEntry.xmlEntry)
+			// validating header..
+			assertEquals(jsonMapData.data[0].recordId, parsedXml.header.identifier.toString())
+			assertEquals(jsonMapData.data[0].dateStamp, parsedXml.header.datestamp.toString())
+			assertEquals("Services", parsedXml.header.setSpec.toString())
+			if ("rif" == rowEntry.metadataPrefix) {
+				logger.info("Validating RIF")
+				def rif = parsedXml.metadata["registryObjects"]
+				
+				def primaryName = rif.registryObject.service.name.findAll{it.@type == "primary"}
+				assertEquals(1, primaryName.size())
+				
+				assertEquals(jsonMapData.data[0].metadata.data.Name, primaryName[0].namePart.findAll{it.@type=="title"}[0].toString())
+				
+				// TODO: add more fields to check
+			}
+		}
+		assertTrue(hasRif)
 	}
 }

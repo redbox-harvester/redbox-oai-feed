@@ -1,0 +1,10 @@
+<record>
+	<header> 
+	    <identifier>$data.get('recordId')</identifier> 
+	    <datestamp>$data.get('dateStamp')</datestamp> 
+	    <setSpec>Services</setSpec> 
+	</header> 
+    <metadata>
+    $currentRendering
+    </metadata>
+</record>
