@@ -8,7 +8,7 @@ This project is an implementation of a <a href='https://github.com/redbox-harves
 
 To quickly install the entire stack, there is installer script tested with <a href='http://nectar.org.au/'>"NeCTAR CentOS 6.5 x86_64"</a>. Of course, this script comes with certain assumptions specific to the image, so you are certainly encouraged to modify the script to meet your needs. Run the ff. commands as root:
 
-    wget https://raw.github.com/redbox-harvester/redbox-oai-feed/master/support/install/redbox_oaipmh_feed.sh
+    wget https://raw.githubusercontent.com/redbox-harvester/redbox-oai-feed/master/support/install/redbox_oaipmh_feed.sh
     chmod +x redbox_oaipmh_feed.sh 
     ./redbox_oaipmh_feed.sh 
  
@@ -20,10 +20,10 @@ If everything went well, you can view the server's available metadata formats he
 
 You can also optionally <a href='https://github.com/redbox-harvester/redbox-oai-feed/blob/master/support/install/'>insert sample data</a>. You may run the ff. command on the same directory used on the previous commands:
     
-    groovy addSampleRecord.groovy
- 
+    groovy addSampleRecord.groovy https://raw.githubusercontent.com/redbox-harvester/redbox-oai-feed/master/support/install/sampleRedboxMintPeople.json
+
 When running the command, you may have to wait for a few minutes as it downloads its dependencies. A couple of minutes or so after it finishes, you can then view the sample record at:
     
     http://localhost/oai-server/?verb=ListRecords&metadataPrefix=eac-cpf 
 
-That's it folks!
+There are many sample files in the install directory so please check it out. That's it folks!
