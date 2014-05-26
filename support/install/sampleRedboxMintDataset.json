@@ -1,12 +1,12 @@
 {
 	"header":{
-		"type":"record_service"
+		"type":"record_dataset"
 	},
 	"data":[ 
 		{
 			"recordId":"db19981770633dc8656c84b2464bcb14",
 			"dateStamp":"2014-03-18T06:09:03Z",
-			"metadataPrefix":[ "rif"],
+			"metadataPrefix":[ "rif", "oai_dc"],
 			"source":"Sample Data JSON file",
 			"metadata": {
 			    "title": "Testing",
@@ -327,15 +327,20 @@
 			},
 			"objectMetadata":{
 				"render-pending":false,
-				"repository.type":"Services",
+				"owner":"admin",
+				"repository.type":"Metadata Registry",
 				"metaPid":"TF-OBJ-META",
-				"jsonConfigOid":"f05ac885408193723707a78755bdeff",
-				"jsonConfigPid":"Services.json",
-				"repository.name":"Local Services",
-				"rulesOid":"8cb984551ac43f9f745187d87ae3b1e7",
-				"objectId":"db19981770633dc8656c84b2464bcb14",
+				"jsonConfigOid":"bb032b6dbe86ac2b4a80f92f27114e83",
+				"ready_to_publish":"ready",
+				"jsonConfigPid":"dataset.json",
+				"repository.name":"ReDBox",
+				"published":true,
+				"rulesOid":"c2ddd5dad6a62627fe9ced1d2cc675d4",
+				"objectId":"87ac73066be4fdbb1f1db8ac8968b5fe",
+				"file.path":"/opt/redbox/home/packages/ef64668c-3c91-42c2-b0ae-a717e02f646e.tfpackage",
 				"scriptType":"python",
-				"rulesPid":"Services.py"
+				"rulesPid":"dataset-rules.py",
+				"localPid":"http://demo.redboxresearchdata.com.au/redbox/published/detail/87ac73066be4fdbb1f1db8ac8968b5fe"
 			},
 			"constants": {
 				"rif": {
@@ -345,6 +350,13 @@
 						"institution": "University of Examples",
 						"RIF-CS Group": "The University of Examples, Australia"
 					}
+				},
+				"oai_dc": {
+					"curation":{"pidProperty":"localPid"},
+					"redbox.identity": {
+						"institution": "University of Examples",
+						"RIF-CS Group": "The University of Examples, Australia"
+					} 
 				}
 			}
 		}

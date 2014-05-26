@@ -45,7 +45,8 @@
 				"rulesOid":"8cb984551ac43f9f745187d87ae3b1e7",
 				"objectId":"db19981770633dc8656c84b2464bcb14",
 				"scriptType":"python",
-				"rulesPid":"Services.py"
+				"rulesPid":"Services.py",
+				"localPid":"http://demo.redboxresearchdata.com.au/mint/published/detail/db19981770633dc8656c84b2464bcb14"
 			},
 			"constants": {
 				"rif": {
