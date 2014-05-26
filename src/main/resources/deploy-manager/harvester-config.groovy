@@ -120,6 +120,18 @@ environments {
 					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
 				}
 			}
+			record_dataset_oai_dc {
+				templates = ["dataset/oai_dc.vm", "dataset/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
+			record_dataset_rif {
+				templates = ["dataset/rif.vm", "dataset/record_wrapper.vm"]
+				scripts {
+					preVelocity = [["velocityTransformer-legacyUtil.groovy":""]]
+				}
+			}
 		}
 		cloningSplitter {
 			srcArray = "metadataPrefix"

@@ -492,10 +492,10 @@ class OaiHarvestTest extends GroovyTestCase {
 				logger.info("Validating RIF")
 				def rif = parsedXml.metadata["registryObjects"]
 				
-//				def primaryName = rif.registryObject.collection.name.findAll{it.@type == "dataset"}
-//				assertEquals(1, primaryName.size())
+				def primaryName = rif.registryObject.collection.name.findAll{it.@type == "primary"}
+				assertEquals(1, primaryName.size())
 //				
-//				assertEquals(jsonMapData.data[0].metadata.title, primaryName[0].namePart.toString())
+				assertEquals(jsonMapData.data[0].metadata["dc:title"], primaryName[0].namePart.toString())
 				
 				// TODO: add more fields to check
 			}
