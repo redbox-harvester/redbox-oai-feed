@@ -26,4 +26,6 @@ When running the command, you may have to wait for a few minutes as it downloads
     
     http://localhost/oai-server/?verb=ListRecords&metadataPrefix=eac-cpf 
 
-There are many sample files in the install directory so please check it out. That's it folks!
+You may modify the json file locally and rerun the command several times to test updates. The "recordId" uniquely identifies the record. Also, there are many sample files in the install directory so please check it out. 
+
+That's it folks!

@@ -150,8 +150,8 @@
 					"curation":{
 						"pidProperty":"localPid",
 						"nlaIntegration":{
-							"agencyCode":"AgencyCode",
-							"agencyName":"AgencyName"
+							"agencyCode":"AU-QQCIF",
+							"agencyName":"Queensland Cyber Infrastructure Foundation"
 						}
 					},
 					"redbox.identity": {
