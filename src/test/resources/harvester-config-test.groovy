@@ -29,7 +29,7 @@ environments {
 			description = "ReDBox OAI-PMH Harvester"
 			base = "${managerBase}${harvesterId}/".toString() // optional base directory.
 			autoStart = true // whether the Harvester Manager will start this harvester upon start up otherwise, it will be manually started by an administrator
-			siPath = "src/main/resources/deploy-manager/applicationContext-SI-harvester.xml" // the app context definition for SI			
+			siPath = 'src/main/resources/deploy-manager/applicationContext-SI-harvester.xml' // the app context definition for SI			
 			classPathEntries = [] // entries that will be added to the class path
 			mbeanExporter = "mbeanExporterOaiFeed" // the exporter is necessary for orderly shutdown
 			orderlyShutdownTimeout = 10000 // in ms
