@@ -4,11 +4,13 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import net.sf.gtools.jms.JmsCategory
 
 class GroovyJMSExample {
-    def sendMessage(url) {
+    def sendMessage(url, port, queueName) {
         use(JmsCategory) {
-            def jms = new ActiveMQConnectionFactory('tcp://localhost:9301')
+			port = port ? port : '9301'
+			queueName = queueName ? queueName : 'oaiPmhFeed'
+            def jms = new ActiveMQConnectionFactory('tcp://localhost:'+port)
             jms.connect { c ->
-                c.queue("oaiPmhFeed") { q ->
+                c.queue(queueName) { q ->
                     String txt = url.toURL().text
                     def msg = createTextMessage(txt)
                     q.send(msg)
@@ -21,6 +23,8 @@ class GroovyJMSExample {
 			println 'Specify the URL of the test data to send.'
 			return
 		}
-        new GroovyJMSExample().sendMessage(args[0])
+		def port = args.size() > 1 ? args[1] : null
+		def queueName = args.size() > 2 ? args[2] : null
+		new GroovyJMSExample().sendMessage(args[0], port, queueName)
     }
 }
